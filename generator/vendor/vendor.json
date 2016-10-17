@@ -1,0 +1,19 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "klfNfdEPsrWYLps2qBkLgfJsNYI=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "2d1e4548da234d9cb742cc3628556fef86aafbac",
+			"revisionTime": "2016-09-12T15:30:41Z"
+		},
+		{
+			"checksumSHA1": "qRGdHxDY9WgXKv8E9t9PgSQcw6U=",
+			"path": "github.com/lxc/lxd/shared",
+			"revision": "375d0e06cb15da0b32df2420bbffff32ce592e37",
+			"revisionTime": "2016-10-14T22:39:13Z"
+		}
+	],
+	"rootPath": "github.com/cloudbees/lxd-client"
+}
