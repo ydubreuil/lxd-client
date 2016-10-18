@@ -1,10 +1,10 @@
-package com.cloudbees.lxd;
+package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.api.ContainerInfo;
-import com.cloudbees.lxd.api.LXDResponse;
-import com.cloudbees.lxd.api.ServerState;
-import com.cloudbees.lxd.utils.HttpUtils;
-import com.cloudbees.lxd.utils.URLUtils;
+import com.cloudbees.lxd.client.api.ContainerInfo;
+import com.cloudbees.lxd.client.api.LXDResponse;
+import com.cloudbees.lxd.client.api.ServerState;
+import com.cloudbees.lxd.client.utils.HttpUtils;
+import com.cloudbees.lxd.client.utils.URLUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -25,7 +25,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.BriefImageInfo",
+      "javaType": "com.cloudbees.lxd.client.api.BriefImageInfo",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -42,7 +42,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.BriefServerState",
+      "javaType": "com.cloudbees.lxd.client.api.BriefServerState",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -66,7 +66,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerExecControl",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerExecControl",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -104,7 +104,7 @@
             },
             "javaType": "java.util.Map\u003cString,String\u003e"
           },
-          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.Device\u003e"
+          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.Device\u003e"
         },
         "ephemeral": {
           "type": "boolean",
@@ -131,7 +131,7 @@
             },
             "javaType": "java.util.Map\u003cString,String\u003e"
           },
-          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.Device\u003e"
+          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.Device\u003e"
         },
         "last_used_at": {
           "type": "string",
@@ -163,7 +163,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerInfo",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerInfo",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -174,29 +174,29 @@
       "properties": {
         "cpu": {
           "$ref": "#/definitions/lxd_ContainerStateCPU",
-          "javaType": "com.cloudbees.lxd.api.ContainerStateCPU"
+          "javaType": "com.cloudbees.lxd.client.api.ContainerStateCPU"
         },
         "disk": {
           "type": "object",
           "description": "",
           "additionalProperties": {
             "$ref": "#/definitions/lxd_ContainerStateDisk",
-            "javaType": "com.cloudbees.lxd.api.ContainerStateDisk"
+            "javaType": "com.cloudbees.lxd.client.api.ContainerStateDisk"
           },
-          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.ContainerStateDisk\u003e"
+          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.ContainerStateDisk\u003e"
         },
         "memory": {
           "$ref": "#/definitions/lxd_ContainerStateMemory",
-          "javaType": "com.cloudbees.lxd.api.ContainerStateMemory"
+          "javaType": "com.cloudbees.lxd.client.api.ContainerStateMemory"
         },
         "network": {
           "type": "object",
           "description": "",
           "additionalProperties": {
             "$ref": "#/definitions/lxd_ContainerStateNetwork",
-            "javaType": "com.cloudbees.lxd.api.ContainerStateNetwork"
+            "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetwork"
           },
-          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.ContainerStateNetwork\u003e"
+          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.ContainerStateNetwork\u003e"
         },
         "pid": {
           "type": "integer",
@@ -218,7 +218,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerState",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerState",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -234,7 +234,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerStateCPU",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateCPU",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -250,7 +250,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerStateDisk",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateDisk",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -281,7 +281,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerStateMemory",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateMemory",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -295,12 +295,12 @@
           "description": "",
           "items": {
             "$ref": "#/definitions/lxd_ContainerStateNetworkAddress",
-            "javaType": "com.cloudbees.lxd.api.ContainerStateNetworkAddress"
+            "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetworkAddress"
           }
         },
         "counters": {
           "$ref": "#/definitions/lxd_ContainerStateNetworkCounters",
-          "javaType": "com.cloudbees.lxd.api.ContainerStateNetworkCounters"
+          "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetworkCounters"
         },
         "host_name": {
           "type": "string",
@@ -324,7 +324,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerStateNetwork",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetwork",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -351,7 +351,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerStateNetworkAddress",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetworkAddress",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -382,7 +382,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ContainerStateNetworkCounters",
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetworkCounters",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -413,7 +413,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.IdmapEntry",
+      "javaType": "com.cloudbees.lxd.client.api.IdmapEntry",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -432,7 +432,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ImageAlias",
+      "javaType": "com.cloudbees.lxd.client.api.ImageAlias",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -446,7 +446,7 @@
           "description": "",
           "items": {
             "$ref": "#/definitions/lxd_ImageAlias",
-            "javaType": "com.cloudbees.lxd.api.ImageAlias"
+            "javaType": "com.cloudbees.lxd.client.api.ImageAlias"
           }
         },
         "architecture": {
@@ -501,7 +501,7 @@
         },
         "update_source": {
           "$ref": "#/definitions/lxd_ImageSource",
-          "javaType": "com.cloudbees.lxd.api.ImageSource"
+          "javaType": "com.cloudbees.lxd.client.api.ImageSource"
         },
         "uploaded_at": {
           "type": "string",
@@ -509,7 +509,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ImageInfo",
+      "javaType": "com.cloudbees.lxd.client.api.ImageInfo",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -536,7 +536,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ImageSource",
+      "javaType": "com.cloudbees.lxd.client.api.ImageSource",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -573,7 +573,7 @@
         },
         "environment": {
           "$ref": "#/definitions/lxd_ServerStateEnvironment",
-          "javaType": "com.cloudbees.lxd.api.ServerStateEnvironment"
+          "javaType": "com.cloudbees.lxd.client.api.ServerStateEnvironment"
         },
         "public": {
           "type": "boolean",
@@ -581,7 +581,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ServerState",
+      "javaType": "com.cloudbees.lxd.client.api.ServerState",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -656,7 +656,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.ServerStateEnvironment",
+      "javaType": "com.cloudbees.lxd.client.api.ServerStateEnvironment",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -694,7 +694,7 @@
             },
             "javaType": "java.util.Map\u003cString,String\u003e"
           },
-          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.Device\u003e"
+          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.Device\u003e"
         },
         "ephemeral": {
           "type": "boolean",
@@ -721,7 +721,7 @@
             },
             "javaType": "java.util.Map\u003cString,String\u003e"
           },
-          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.Device\u003e"
+          "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.Device\u003e"
         },
         "last_used_at": {
           "type": "string",
@@ -745,7 +745,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "com.cloudbees.lxd.api.SnapshotInfo",
+      "javaType": "com.cloudbees.lxd.client.api.SnapshotInfo",
       "javaInterfaces": [
         "java.io.Serializable"
       ]
@@ -755,47 +755,47 @@
   "properties": {
     "BriefImageInfo": {
       "$ref": "#/definitions/lxd_BriefImageInfo",
-      "javaType": "com.cloudbees.lxd.api.BriefImageInfo"
+      "javaType": "com.cloudbees.lxd.client.api.BriefImageInfo"
     },
     "BriefServerState": {
       "$ref": "#/definitions/lxd_BriefServerState",
-      "javaType": "com.cloudbees.lxd.api.BriefServerState"
+      "javaType": "com.cloudbees.lxd.client.api.BriefServerState"
     },
     "ContainerExecControl": {
       "$ref": "#/definitions/lxd_ContainerExecControl",
-      "javaType": "com.cloudbees.lxd.api.ContainerExecControl"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerExecControl"
     },
     "ContainerInfo": {
       "$ref": "#/definitions/lxd_ContainerInfo",
-      "javaType": "com.cloudbees.lxd.api.ContainerInfo"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerInfo"
     },
     "ContainerState": {
       "$ref": "#/definitions/lxd_ContainerState",
-      "javaType": "com.cloudbees.lxd.api.ContainerState"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerState"
     },
     "ContainerStateCPU": {
       "$ref": "#/definitions/lxd_ContainerStateCPU",
-      "javaType": "com.cloudbees.lxd.api.ContainerStateCPU"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateCPU"
     },
     "ContainerStateDisk": {
       "$ref": "#/definitions/lxd_ContainerStateDisk",
-      "javaType": "com.cloudbees.lxd.api.ContainerStateDisk"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateDisk"
     },
     "ContainerStateMemory": {
       "$ref": "#/definitions/lxd_ContainerStateMemory",
-      "javaType": "com.cloudbees.lxd.api.ContainerStateMemory"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateMemory"
     },
     "ContainerStateNetwork": {
       "$ref": "#/definitions/lxd_ContainerStateNetwork",
-      "javaType": "com.cloudbees.lxd.api.ContainerStateNetwork"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetwork"
     },
     "ContainerStateNetworkAddress": {
       "$ref": "#/definitions/lxd_ContainerStateNetworkAddress",
-      "javaType": "com.cloudbees.lxd.api.ContainerStateNetworkAddress"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetworkAddress"
     },
     "ContainerStateNetworkCounters": {
       "$ref": "#/definitions/lxd_ContainerStateNetworkCounters",
-      "javaType": "com.cloudbees.lxd.api.ContainerStateNetworkCounters"
+      "javaType": "com.cloudbees.lxd.client.api.ContainerStateNetworkCounters"
     },
     "Device": {
       "type": "object",
@@ -818,27 +818,27 @@
         },
         "javaType": "java.util.Map\u003cString,String\u003e"
       },
-      "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.api.Device\u003e"
+      "javaType": "java.util.Map\u003cString,com.cloudbees.lxd.client.api.Device\u003e"
     },
     "IdmapEntry": {
       "$ref": "#/definitions/lxd_IdmapEntry",
-      "javaType": "com.cloudbees.lxd.api.IdmapEntry"
+      "javaType": "com.cloudbees.lxd.client.api.IdmapEntry"
     },
     "ImageInfo": {
       "$ref": "#/definitions/lxd_ImageInfo",
-      "javaType": "com.cloudbees.lxd.api.ImageInfo"
+      "javaType": "com.cloudbees.lxd.client.api.ImageInfo"
     },
     "ServerState": {
       "$ref": "#/definitions/lxd_ServerState",
-      "javaType": "com.cloudbees.lxd.api.ServerState"
+      "javaType": "com.cloudbees.lxd.client.api.ServerState"
     },
     "ServerStateEnvironment": {
       "$ref": "#/definitions/lxd_ServerStateEnvironment",
-      "javaType": "com.cloudbees.lxd.api.ServerStateEnvironment"
+      "javaType": "com.cloudbees.lxd.client.api.ServerStateEnvironment"
     },
     "SnapshotInfo": {
       "$ref": "#/definitions/lxd_SnapshotInfo",
-      "javaType": "com.cloudbees.lxd.api.SnapshotInfo"
+      "javaType": "com.cloudbees.lxd.client.api.SnapshotInfo"
     }
   },
   "additionalProperties": true

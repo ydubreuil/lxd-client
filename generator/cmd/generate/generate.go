@@ -52,7 +52,7 @@ type Schema struct {
 
 func main() {
 	packages := []schemagen.PackageDescriptor{
-		{"github.com/cloudbees/lxd-client/generator/vendor/github.com/lxc/lxd/shared", "com.cloudbees.lxd.api", "lxd_"},
+		{"github.com/cloudbees/lxd-client/generator/vendor/github.com/lxc/lxd/shared", "com.cloudbees.lxd.client.api", "lxd_"},
 	}
 
 	typeMap := map[reflect.Type]reflect.Type{

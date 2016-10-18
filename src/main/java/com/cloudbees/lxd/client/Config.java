@@ -1,4 +1,4 @@
-package com.cloudbees.lxd;
+package com.cloudbees.lxd.client;
 
 public class Config {
 

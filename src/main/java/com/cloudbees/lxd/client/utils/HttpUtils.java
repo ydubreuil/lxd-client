@@ -1,13 +1,10 @@
-package com.cloudbees.lxd.utils;
+package com.cloudbees.lxd.client.utils;
 
-import com.cloudbees.lxd.Config;
-import com.cloudbees.lxd.utils.unix.UnixSocketFactory;
+import com.cloudbees.lxd.client.Config;
+import com.cloudbees.lxd.client.utils.unix.UnixSocketFactory;
 import okhttp3.OkHttpClient;
 
 public class HttpUtils {
-    private static final String UNIX_SCHEME = "unix";
-    private static final String FILE_SCHEME = "file";
-
     public static OkHttpClient createHttpClient(final Config config) {
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
 

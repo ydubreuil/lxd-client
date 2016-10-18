@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.cloudbees.lxd.utils;
+package com.cloudbees.lxd.client.utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;

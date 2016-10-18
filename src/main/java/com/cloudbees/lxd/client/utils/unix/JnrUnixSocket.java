@@ -1,4 +1,4 @@
-package com.cloudbees.lxd.utils.unix;
+package com.cloudbees.lxd.client.utils.unix;
 
 import java.io.*;
 import java.net.*;

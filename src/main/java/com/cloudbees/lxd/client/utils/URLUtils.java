@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package com.cloudbees.lxd.utils;
+package com.cloudbees.lxd.client.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

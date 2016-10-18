@@ -1,4 +1,4 @@
-package com.cloudbees.lxd.api;
+package com.cloudbees.lxd.client.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
