@@ -28,8 +28,9 @@ public class URLUtils {
     public static String join(String... parts) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < parts.length; i++) {
+            if (parts[i] == null) continue;
             sb.append(parts[i]);
-            if (i < parts.length - 1) {
+            if (i < parts.length - 1 && parts[i+1] != null) {
                 sb.append("/");
             }
         }

@@ -31,7 +31,6 @@ import (
 
 type Schema struct {
 	IdmapEntry                    api.IdmapEntry
-	ImageInfo                     api.ImageInfo
     Device                        api.Device
     Devices                       api.Devices
 	ContainerState                api.ContainerState
@@ -44,6 +43,9 @@ type Schema struct {
 	ContainerExecControl          api.ContainerExecControl
 	SnapshotInfo                  api.SnapshotInfo
 	ContainerInfo                 api.ContainerInfo
+    ImageAliasesEntry             api.ImageAliasesEntry
+    ImageSource                   api.ImageSource
+    ImageInfo                     api.ImageInfo
 	BriefImageInfo                api.BriefImageInfo
 	ServerStateEnvironment        api.ServerStateEnvironment
 	ServerState                   api.ServerState

@@ -437,6 +437,29 @@
         "java.io.Serializable"
       ]
     },
+    "lxd_ImageAliasesEntry": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": ""
+        },
+        "name": {
+          "type": "string",
+          "description": ""
+        },
+        "target": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "com.cloudbees.lxd.client.api.ImageAliasesEntry",
+      "javaInterfaces": [
+        "java.io.Serializable"
+      ]
+    },
     "lxd_ImageInfo": {
       "type": "object",
       "description": "",
@@ -824,9 +847,17 @@
       "$ref": "#/definitions/lxd_IdmapEntry",
       "javaType": "com.cloudbees.lxd.client.api.IdmapEntry"
     },
+    "ImageAliasesEntry": {
+      "$ref": "#/definitions/lxd_ImageAliasesEntry",
+      "javaType": "com.cloudbees.lxd.client.api.ImageAliasesEntry"
+    },
     "ImageInfo": {
       "$ref": "#/definitions/lxd_ImageInfo",
       "javaType": "com.cloudbees.lxd.client.api.ImageInfo"
+    },
+    "ImageSource": {
+      "$ref": "#/definitions/lxd_ImageSource",
+      "javaType": "com.cloudbees.lxd.client.api.ImageSource"
     },
     "ServerState": {
       "$ref": "#/definitions/lxd_ServerState",

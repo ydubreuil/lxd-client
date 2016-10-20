@@ -1,14 +1,20 @@
 package com.cloudbees.lxd.client;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Config {
 
-    private final String remoteApiUrl;
+    private final String baseURL;
     private final String unixSocketPath;
+
+    private final Map<String, String> remotesURL = new HashMap<>();
 
     private boolean trustCerts;
 
     /** PEM encoded bytes of the client's certificate.
-     * If {@link Config#remoteApiUrl} indicates a Unix socket, the certificate and key bytes will not be used. */
+     * If {@link Config#baseURL} indicates a Unix socket, the certificate and key bytes will not be used. */
     private String clientPEMCert;
 
     /** PEM encoded private bytes of the client's key associated with its certificate */
@@ -17,16 +23,21 @@ public class Config {
     /** PEM encoded client certificate authority (if any) */
     private String clientPEMCa;
 
-    private Config(String apiUri, String unixSocketPath, String clientPEMCert, String clientPEMKey, String clientPEMCa) {
-        this.remoteApiUrl = apiUri;
+    private Config(String baseURL, String unixSocketPath, String clientPEMCert, String clientPEMKey, String clientPEMCa) {
+        this.baseURL = baseURL;
         this.unixSocketPath = unixSocketPath;
         this.clientPEMCert = clientPEMCert;
         this.clientPEMKey = clientPEMKey;
         this.clientPEMCa = clientPEMCa;
+
+        // from https://github.com/lxc/lxd/blob/34f62a7ea5cfea0f640ceb16ffc49a8f7c206c6c/config.go#L54
+        remotesURL.put("images", "https://images.linuxcontainers.org");
+        remotesURL.put("ubuntu", "https://cloud-images.ubuntu.com/releases");
+        remotesURL.put("ubuntu-daily", "https://cloud-images.ubuntu.com/daily");
     }
 
-    public String getRemoteApiUrl() {
-        return remoteApiUrl;
+    public String getBaseURL() {
+        return baseURL;
     }
 
     public String getUnixSocketPath() {
@@ -53,6 +64,10 @@ public class Config {
         return clientPEMCa;
     }
 
+    public Map<String, String> getRemotesURL() {
+        return remotesURL;
+    }
+
     public static Config localAccessConfig() {
         return new Config("http://localhost:80", "/var/lib/lxd/unix.socket", null, null, null);
     }
@@ -60,7 +75,7 @@ public class Config {
         return new Config("http://localhost:80", unixSocketPath, null, null, null);
     }
 
-    public static Config remoteAccessConfig(String remoteUrl, String clientPEMCert, String clientPEMKey, String clientPEMCa) {
-        return new Config(remoteUrl, null, clientPEMCert, clientPEMKey, clientPEMCa);
+    public static Config remoteAccessConfig(String baseURL, String clientPEMCert, String clientPEMKey, String clientPEMCa) {
+        return new Config(baseURL, null, clientPEMCert, clientPEMKey, clientPEMCa);
     }
 }
