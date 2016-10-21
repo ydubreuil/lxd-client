@@ -30,6 +30,7 @@ import (
 )
 
 type Schema struct {
+    CertInfo                      api.CertInfo
 	IdmapEntry                    api.IdmapEntry
     Device                        api.Device
     Devices                       api.Devices
@@ -43,6 +44,9 @@ type Schema struct {
 	ContainerExecControl          api.ContainerExecControl
 	SnapshotInfo                  api.SnapshotInfo
 	ContainerInfo                 api.ContainerInfo
+    BriefContainerInfo            api.BriefContainerInfo
+    ProfileConfig                 api.ProfileConfig
+    NetworkConfig                 api.NetworkConfig
     ImageAliasesEntry             api.ImageAliasesEntry
     ImageSource                   api.ImageSource
     ImageInfo                     api.ImageInfo
@@ -50,6 +54,12 @@ type Schema struct {
 	ServerStateEnvironment        api.ServerStateEnvironment
 	ServerState                   api.ServerState
 	BriefServerState              api.BriefServerState
+    SimpleStreamsManifest         api.SimpleStreamsManifest
+    SimpleStreamsManifestProduct  api.SimpleStreamsManifestProduct
+    SimpleStreamsManifestProductVersion api.SimpleStreamsManifestProductVersion
+    SimpleStreamsManifestProductVersionItem api.SimpleStreamsManifestProductVersionItem
+    SimpleStreamsIndex            api.SimpleStreamsIndex
+    SimpleStreamsIndexStream      api.SimpleStreamsIndexStream
 }
 
 func main() {

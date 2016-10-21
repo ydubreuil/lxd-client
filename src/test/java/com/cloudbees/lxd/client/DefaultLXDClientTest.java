@@ -1,42 +1,26 @@
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.AsyncOperation;
-import com.cloudbees.lxd.client.api.ImageAliasesEntry;
-import com.cloudbees.lxd.client.api.ImageInfo;
-import org.junit.Before;
-import org.junit.Ignore;
+import com.cloudbees.lxd.client.api.ServerState;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Test;
 
-import java.nio.file.Paths;
-import java.util.List;
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 public class DefaultLXDClientTest {
 
-    DefaultLXDClient client;
-
-    @Before
-    public void setUp() {
-        client = new DefaultLXDClient(Config.localAccessConfig(Paths.get("lxd.socket").toAbsolutePath().toString()));
-    }
-
-    @Ignore
     @Test
-    public void miscOptions() {
-        System.out.println(client.listContainers());
-        System.out.println(client.serverStatus());
-    }
+    public void serverStatusTest() throws IOException, InterruptedException {
+        try (TestHelper t = new TestHelper.Builder().jsonDispatchResource("/1.0", "serverStatus-trusted.json").build()) {
+            ServerState serverState = t.client.serverStatus();
 
-    @Test
-    public void listImages()  {
-        List<ImageInfo> imageInfos = client.listImages();
-        System.out.println(imageInfos);
-        ImageAliasesEntry aliasesEntry = client.imageGetAlias("ubuntu:16.04");
-        ImageInfo imageInfo = client.imageInfo("ubuntu:16.04");
-    }
+            RecordedRequest request1 = t.server.takeRequest();
+            assertEquals("/1.0", request1.getPath());
 
-    @Test
-    public void createContainer()  {
-        AsyncOperation container = client.containerInit("nico-canard", "ubuntu", "16.04", null, null, null, true);
-        System.out.println(container);
+            assertEquals("1.0", serverState.getApiVersion());
+            assertEquals("trusted", serverState.getAuth());
+            assertEquals("lxc", serverState.getEnvironment().getDriver());
+        }
     }
 }

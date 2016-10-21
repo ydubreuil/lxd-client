@@ -78,4 +78,8 @@ public class Config {
     public static Config remoteAccessConfig(String baseURL, String clientPEMCert, String clientPEMKey, String clientPEMCa) {
         return new Config(baseURL, null, clientPEMCert, clientPEMKey, clientPEMCa);
     }
+
+    public static Config remoteAccessConfig(String baseURL) {
+        return new Config(baseURL, null, null, null, null);
+    }
 }
