@@ -3,6 +3,7 @@ package com.cloudbees.lxd.client;
 import com.cloudbees.lxd.client.api.AsyncOperation;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.ImageInfo;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,14 +30,13 @@ public class DefaultLXDClientTestIT {
     @Test
     public void listImages()  {
         List<ImageInfo> imageInfos = client.listImages();
-        System.out.println(imageInfos);
-        ImageAliasesEntry aliasesEntry = client.imageGetAlias("ubuntu:16.04");
-        ImageInfo imageInfo = client.imageInfo("ubuntu:16.04");
+        ImageAliasesEntry aliasesEntry = client.imageGetAlias("ubuntu");
+        ImageInfo imageInfo = client.imageInfo(aliasesEntry.getTarget());
     }
 
     @Test
-    public void createContainer()  {
+    public void createContainer() {
         AsyncOperation container = client.containerInit("nico-canard", "ubuntu", "16.04", null, null, null, true);
-        System.out.println(container);
+        System.out.println(ToStringBuilder.reflectionToString(container));
     }
 }

@@ -10,6 +10,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.impl.ExternalTypeHandler;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -55,32 +57,57 @@ public class RequestContext implements AutoCloseable {
         return config;
     }
 
-    public RequestExecutor newGet(String resourceUrl) {
-        Request.Builder requestBuilder = new Request.Builder().get().url(URLUtils.join(rootApiUrl, resourceUrl));
-        return new RequestExecutor(requestBuilder, 200);
+    public RequestBuilder get(String resourceUrl) {
+        return new RequestBuilder(resourceUrl, "GET");
     }
 
-    public RequestExecutor newPost(String resourceUrl, Object resource) {
+    public RequestBuilder post(String resourceUrl) {
+        return new RequestBuilder(resourceUrl, "POST");
+    }
+
+    public RequestBuilder put(String resourceUrl) {
+        return new RequestBuilder(resourceUrl, "PUT");
+    }
+
+    public RequestBuilder delete(String resourceUrl) {
+        return new RequestBuilder(resourceUrl, "DELETE");
+    }
+
+    class RequestBuilder {
+        final String method;
+        final String resourceUrl;
         RequestBody body = null;
-        try {
-            body = RequestBody.create(MEDIA_TYPE_JSON, JSON_MAPPER.writeValueAsString(resource));
-        } catch (JsonProcessingException e) {
-            throw new LxdClientException(e);
+
+        RequestBuilder(String resourceUrl, String method) {
+            this.method = method;
+            this.resourceUrl = resourceUrl;
         }
 
-        Request.Builder requestBuilder = new Request.Builder().post(body).url(URLUtils.join(rootApiUrl, resourceUrl));
-        return new RequestExecutor(requestBuilder);
+        public RequestExecutor build() {
+            return new RequestExecutor(new Request.Builder().method(method, body), resourceUrl);
+        }
+
+        public RequestBuilder body(Object resource) {
+            try {
+                body = RequestBody.create(MEDIA_TYPE_JSON, JSON_MAPPER.writeValueAsString(resource));
+            } catch (JsonProcessingException e) {
+                throw new LxdClientException(e);
+            }
+            return this;
+        }
     }
 
     class RequestExecutor {
         final Request.Builder requestBuilder;
         ArrayList<Integer> expectedHttpStatusCodes = new ArrayList<>();
 
-        RequestExecutor(Request.Builder requestBuilder, int... expectedStatusCodes) {
+        RequestExecutor(Request.Builder requestBuilder, String resourceUrl, int... expectedStatusCodes) {
             this.requestBuilder = requestBuilder;
             for(int expectedStatusCode: expectedStatusCodes) {
                 expectedHttpStatusCodes.add(expectedStatusCode);
             }
+
+            requestBuilder.url(URLUtils.join(rootApiUrl, resourceUrl));
         }
 
         public RequestExecutor expect(int... expectedStatusCodes) {
@@ -96,10 +123,15 @@ public class RequestContext implements AutoCloseable {
             return this;
         }
 
-        public ResponseParser execute() {
+        public Call newCall() {
             Request request = requestBuilder.build();
+            return client.newCall(request);
+        }
+
+        public ResponseParser execute() {
             try {
-                return new ResponseParser(request, client.newCall(request).execute(), expectedHttpStatusCodes);
+                Call call = newCall();
+                return new ResponseParser(call.request(), call.execute(), expectedHttpStatusCodes);
             } catch (IOException e) {
                 throw new LxdClientException(e);
             }

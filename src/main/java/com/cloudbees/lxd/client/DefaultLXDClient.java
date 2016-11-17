@@ -1,6 +1,7 @@
 package com.cloudbees.lxd.client;
 
 import com.cloudbees.lxd.client.api.AsyncOperation;
+import com.cloudbees.lxd.client.api.ContainerAction;
 import com.cloudbees.lxd.client.api.ContainerInfo;
 import com.cloudbees.lxd.client.api.ContainerState;
 import com.cloudbees.lxd.client.api.Device;
@@ -13,11 +14,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 import static java.lang.String.format;
 
 public class DefaultLXDClient implements AutoCloseable {
+
+    private static final String RECURSION_SUFFIX = "?recursion=1";
 
     protected final RequestContext ctx;
 
@@ -35,19 +39,19 @@ public class DefaultLXDClient implements AutoCloseable {
     }
 
     public ServerState serverStatus() {
-        return ctx.newGet(null).execute().parseSync(new TypeReference<LxdResponse<ServerState>>() {});
+        return ctx.get(null).build().execute().parseSync(new TypeReference<LxdResponse<ServerState>>() {});
     }
 
     public List<ContainerInfo> listContainers() {
-        return ctx.newGet("/containers?recursive=1").execute().parseSync(new TypeReference<LxdResponse<List<ContainerInfo>>>() {});
+        return ctx.get("containers" + RECURSION_SUFFIX).build().execute().parseSync(new TypeReference<LxdResponse<List<ContainerInfo>>>() {});
     }
 
     public ContainerInfo containerInfo(String name) {
-        return ctx.newGet(format("/containers/%s", name)).expect(200, 404).execute().parseSync(new TypeReference<LxdResponse<ContainerInfo>>() {});
+        return ctx.get(format("containers/%s", name)).build().expect(200, 404).execute().parseSync(new TypeReference<LxdResponse<ContainerInfo>>() {});
     }
 
     public ContainerState containerState(String name) {
-        return ctx.newGet(format("containers/%s/state", name)).expect(200, 404).execute().parseSync(new TypeReference<LxdResponse<ContainerState>>() {});
+        return ctx.get(format("containers/%s/state", name)).build().expect(200, 404).execute().parseSync(new TypeReference<LxdResponse<ContainerState>>() {});
     }
 
     /**
@@ -101,20 +105,45 @@ public class DefaultLXDClient implements AutoCloseable {
             body.put("ephem", ephem);
         }
 
-        return ctx.newPost("containers", body).expect(202).execute().parseAsyncOperation();
+        return ctx.post("containers").body(body).build().expect(202).execute().parseAsyncOperation();
+    }
+
+    public AsyncOperation containerAction(String name, ContainerAction action, int timeout, boolean force, boolean stateful) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("action", action.getValue());
+        body.put("timeout", timeout);
+        body.put("force", force);
+
+        switch (action) {
+            case Start:
+            case Stop:
+                body.put("stateful", stateful);
+        }
+
+        return ctx.put("containers").body(body).build().expect(202).execute().parseAsyncOperation();
+    }
+
+    public AsyncOperation containerDelete(String name, ContainerAction action, int timeout, boolean force, boolean stateful) {
+        String[] slashSplitted = name.split("/", 1);
+        String url = slashSplitted.length == 1 ? format("containers/%s", name) : format("containers/%s/snapshots/%s", slashSplitted[0], slashSplitted[1]);
+        return ctx.delete(url).build().expect(202).execute().parseAsyncOperation();
     }
 
     public List<ImageInfo> listImages() {
-        return ctx.newGet("images?recursive=1").execute().parseSync(new TypeReference<LxdResponse<List<ImageInfo>>>() {});
+        return ctx.get("images" + RECURSION_SUFFIX).build().execute().parseSync(new TypeReference<LxdResponse<List<ImageInfo>>>() {});
     }
 
-    public ImageInfo imageInfo(String name) {
-        return ctx.newGet(format("/images/%s", name)).execute().parseSync(new TypeReference<LxdResponse<ImageInfo>>() {});
+    public AsyncOperation imageDelete(String imageFingerprint) {
+        return ctx.delete(format("images/%s", imageFingerprint)).build().expect(202).execute().parseAsyncOperation();
     }
 
-    public ImageAliasesEntry imageGetAlias(String name) {
-        return ctx.newGet(format("/images/aliases/%s", name)).execute().parseSync(new TypeReference<LxdResponse<ImageAliasesEntry>>() {});
+    public ImageInfo imageInfo(String imageFingerprint) {
+        return ctx.get(format("images/%s", imageFingerprint)).build().execute().parseSync(new TypeReference<LxdResponse<ImageInfo>>() {});
     }
 
+    public ImageAliasesEntry imageGetAlias(String aliasName) {
+        return ctx.get(format("images/aliases/%s", aliasName)).build().execute().parseSync(new TypeReference<LxdResponse<ImageAliasesEntry>>() {});
+    }
+    
     private static final Logger logger = Logger.getLogger(DefaultLXDClient.class.getName());
 }

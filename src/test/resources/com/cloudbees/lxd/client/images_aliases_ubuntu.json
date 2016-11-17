@@ -1,0 +1,10 @@
+{
+    "type": "sync",
+    "status": "Success",
+    "status_code": 200,
+    "metadata": {
+        "name": "ubuntu",
+        "description": "ubuntu",
+        "target": "6f25adef061c3f2186c6910bff8cacd0c63e1493e3f8b616e52eb84076890bd1"
+    }
+}

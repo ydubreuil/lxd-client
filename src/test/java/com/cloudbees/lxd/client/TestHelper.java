@@ -9,8 +9,13 @@ import okio.Buffer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * This utility class creates boilerplate to write tests against a Mock LXD server
+ */
 public class TestHelper implements AutoCloseable {
 
     public final MockWebServer server;
@@ -30,27 +35,28 @@ public class TestHelper implements AutoCloseable {
 
     public static class Builder {
         final MockWebServer server = new MockWebServer();
+        final Map<String, Buffer> dispatchedJsonData = new HashMap<>();
 
-        public Builder jsonDispatchString(String targetUrl, String body) {
-            server.setDispatcher(newJsonDispatcher(targetUrl, new Buffer().writeUtf8(body)));
+        public Builder dispatchJsonString(String targetUrl, String body) {
+            dispatchedJsonData.put(targetUrl, new Buffer().writeUtf8(body));
             return this;
         }
 
-        public Builder jsonDispatchResource(String targetUrl, String classpathResource) throws IOException {
-            InputStream stream = getClass().getResourceAsStream(classpathResource);
+        public Builder dispatchJsonFile(String targetUrl, String classpathResourcePath) throws IOException {
+            InputStream stream = getClass().getResourceAsStream(classpathResourcePath);
             if (stream == null) {
-                throw new IllegalArgumentException("Resource "+classpathResource+" not found in classpath");
+                throw new IllegalArgumentException("Resource "+classpathResourcePath+" not found in classpath");
             }
-            server.setDispatcher(newJsonDispatcher(targetUrl, new Buffer().readFrom(stream)));
+            dispatchedJsonData.put(targetUrl, new Buffer().readFrom(stream));
             return this;
         }
 
-        public Dispatcher newJsonDispatcher(String targetUrl, Buffer body) {
+        public Dispatcher buildJsonDispatcher() {
             return new Dispatcher() {
                 @Override
                 public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-                    if (request.getPath().equals(targetUrl)) {
-                        return new MockResponse().setResponseCode(200).setBody(body).setHeader("Content-Type", "application/json; charset=utf-8");
+                    if (dispatchedJsonData.containsKey(request.getPath())) {
+                        return new MockResponse().setResponseCode(200).setBody(dispatchedJsonData.get(request.getPath())).setHeader("Content-Type", "application/json; charset=utf-8");
                     }
                     return new MockResponse().setResponseCode(500);
                 }
@@ -63,6 +69,9 @@ public class TestHelper implements AutoCloseable {
         }
 
         TestHelper build() throws IOException {
+            if (dispatchedJsonData.size() > 0) {
+                server.setDispatcher(buildJsonDispatcher());
+            }
             return new TestHelper(server);
         }
     }
