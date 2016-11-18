@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.Call;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -17,6 +18,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.function.Function;
 
@@ -54,37 +56,57 @@ public class RequestContext implements AutoCloseable {
         return config;
     }
 
+    private HttpUrl buildResourceUrl(String resourceUrl) {
+        return HttpUrl.parse(URLUtils.join(rootApiUrl, resourceUrl));
+    }
+
+    private HttpUrl buildResourceUrl(Function<HttpUrl.Builder, HttpUrl.Builder> resourceUrlBuilder) {
+        return resourceUrlBuilder.apply(HttpUrl.parse(rootApiUrl).newBuilder()).build();
+    }
+
     public RequestBuilder get(String resourceUrl) {
-        return new RequestBuilder(resourceUrl, "GET");
+        return new RequestBuilder(buildResourceUrl(resourceUrl), "GET");
+    }
+
+    public RequestBuilder get(Function<HttpUrl.Builder, HttpUrl.Builder> resourceUrlBuilder) {
+        return new RequestBuilder(buildResourceUrl(resourceUrlBuilder), "GET");
     }
 
     public RequestBuilder post(String resourceUrl) {
-        return new RequestBuilder(resourceUrl, "POST");
+        return new RequestBuilder(buildResourceUrl(resourceUrl), "POST");
+    }
+
+    public RequestBuilder post(Function<HttpUrl.Builder, HttpUrl.Builder> resourceUrlBuilder) {
+        return new RequestBuilder(buildResourceUrl(resourceUrlBuilder), "POST");
     }
 
     public RequestBuilder put(String resourceUrl) {
-        return new RequestBuilder(resourceUrl, "PUT");
+        return new RequestBuilder(buildResourceUrl(resourceUrl), "PUT");
     }
 
     public RequestBuilder delete(String resourceUrl) {
-        return new RequestBuilder(resourceUrl, "DELETE");
+        return new RequestBuilder(buildResourceUrl(resourceUrl), "DELETE");
     }
 
     class RequestBuilder {
         final String method;
-        final String resourceUrl;
+        final HttpUrl resourceUrl;
         RequestBody body = null;
 
-        RequestBuilder(String resourceUrl, String method) {
+        RequestBuilder(HttpUrl resourceUrl, String method) {
             this.method = method;
             this.resourceUrl = resourceUrl;
         }
 
-        public RequestExecutor build() {
-            return new RequestExecutor(new Request.Builder().method(method, body), resourceUrl);
+        public RequestExecutor build(Function<Request.Builder, Request.Builder> f) {
+            return new RequestExecutor(f.apply(new Request.Builder().method(method, body)).addHeader("User-Agent", "LXD-Java-Client"), resourceUrl);
         }
 
-        public RequestBuilder body(Object resource) {
+        public RequestExecutor build() {
+            return build(Function.identity());
+        }
+
+        public RequestBuilder jsonBody(Object resource) {
             try {
                 body = RequestBody.create(MEDIA_TYPE_JSON, JSON_MAPPER.writeValueAsString(resource));
             } catch (JsonProcessingException e) {
@@ -92,32 +114,19 @@ public class RequestContext implements AutoCloseable {
             }
             return this;
         }
+
+        public RequestBuilder body(RequestBody body) {
+            this.body = body;
+            return this;
+        }
     }
 
     class RequestExecutor {
         final Request.Builder requestBuilder;
-        ArrayList<Integer> expectedHttpStatusCodes = new ArrayList<>();
 
-        RequestExecutor(Request.Builder requestBuilder, String resourceUrl, int... expectedStatusCodes) {
+        RequestExecutor(Request.Builder requestBuilder, HttpUrl resourceUrl) {
             this.requestBuilder = requestBuilder;
-            for(int expectedStatusCode: expectedStatusCodes) {
-                expectedHttpStatusCodes.add(expectedStatusCode);
-            }
-
-            requestBuilder.url(URLUtils.join(rootApiUrl, resourceUrl));
-        }
-
-        public RequestExecutor expect(int... expectedStatusCodes) {
-            expectedHttpStatusCodes = new ArrayList<>();
-            for(int expectedStatusCode: expectedStatusCodes) {
-                expectedHttpStatusCodes.add(expectedStatusCode);
-            }
-            return this;
-        }
-
-        public RequestExecutor apply(Function<Request.Builder, Void> f) {
-            f.apply(requestBuilder);
-            return this;
+            requestBuilder.url(resourceUrl);
         }
 
         public Call newCall() {
@@ -128,7 +137,7 @@ public class RequestContext implements AutoCloseable {
         public ResponseParser execute() {
             try {
                 Call call = newCall();
-                return new ResponseParser(call.request(), call.execute(), expectedHttpStatusCodes);
+                return new ResponseParser(call.request(), call.execute());
             } catch (IOException e) {
                 throw new LxdClientException(e);
             }
@@ -138,19 +147,25 @@ public class RequestContext implements AutoCloseable {
     class ResponseParser {
         final Request request;
         final Response response;
-        final ArrayList<Integer> expectedHttpStatusCodes;
+        final ArrayList<Integer> expectedHttpStatusCodes = new ArrayList<>();
 
-        ResponseParser(Request request, Response response, ArrayList<Integer> expectedHttpStatusCodes) {
+        ResponseParser(Request request, Response response) {
             this.request = request;
             this.response = response;
-            this.expectedHttpStatusCodes = expectedHttpStatusCodes;
+        }
+
+        public ResponseParser expect(int... expectedStatusCodes) {
+            for(int expectedStatusCode: expectedStatusCodes) {
+                expectedHttpStatusCodes.add(expectedStatusCode);
+            }
+            return this;
         }
 
         public <T> LxdResponse<T> parse(TypeReference<LxdResponse<T>> typeReference, ResponseType expectedResponseType) {
             assertHttpResponseCodes();
             LxdResponse<T> lxdResponse = null;
             try {
-                // we do not use a stream here to get the body dumped by Jackson when somethings goes wrong
+                // we do not use a stream here to get the jsonBody dumped by Jackson when somethings goes wrong
                 String body = response.body().string();
                 lxdResponse = JSON_MAPPER.readValue(body, typeReference);
             } catch (IOException e) {

@@ -63,7 +63,7 @@ public class DefaultLXDClientTest {
         try (TestHelper t = new TestHelper.Builder()
             .dispatchJsonFile("/1.0/containers/it-957d09c12a9", "operations/start/container.json")
             .dispatchJsonFile("/1.0/containers/it-957d09c12a9/state", "operations/start/state.json", 202)
-            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait", "operations/start/operation.json", 200)
+            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait?timeout=30", "operations/start/operation.json")
             .build()) {
 
             ContainerInfo containerInfo = t.client.containerInfo("it-957d09c12a9");

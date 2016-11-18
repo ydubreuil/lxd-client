@@ -58,4 +58,10 @@ public class DefaultLXDClientTestIT {
         LxdResponse<Operation> containerDeleted = client.waitForCompletion(containerDelete);
         assertEquals(Operation.Status.Success.getValue(), containerDeleted.getStatusCode().intValue());
     }
+
+    @Test
+    public void filePush() {
+        final String name = "it-manual";
+        client.filePush(name, "/pom.xml", 0, 0, "777", Paths.get("pom.xml").toFile());
+    }
 }
