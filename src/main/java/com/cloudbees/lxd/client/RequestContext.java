@@ -1,6 +1,6 @@
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.AsyncOperation;
+import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.ResponseType;
 import com.cloudbees.lxd.client.utils.HttpUtils;
@@ -9,9 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.impl.ExternalTypeHandler;
 import okhttp3.Call;
-import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -19,7 +17,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.function.Function;
 
@@ -37,7 +34,7 @@ public class RequestContext implements AutoCloseable {
     public RequestContext(Config config) {
         this.config = config;
         this.client = HttpUtils.createHttpClient(config);
-        this.rootApiUrl = URLUtils.join(config.useUnixTransport() ? "http://localhost:80" : config.getBaseURL(), "1.0");
+        this.rootApiUrl = URLUtils.join(config.useUnixTransport() ? "http://localhost:80" : config.getBaseURL());
     }
 
     @Override
@@ -149,11 +146,11 @@ public class RequestContext implements AutoCloseable {
             this.expectedHttpStatusCodes = expectedHttpStatusCodes;
         }
 
-        public <T> T parse(TypeReference<LxdResponse<T>> typeReference, ResponseType responseType) {
+        public <T> LxdResponse<T> parse(TypeReference<LxdResponse<T>> typeReference, ResponseType expectedResponseType) {
             assertHttpResponseCodes();
             LxdResponse<T> lxdResponse = null;
             try {
-                // do not use a stream here to get the body dumped by Jackson when somethings goes wrong
+                // we do not use a stream here to get the body dumped by Jackson when somethings goes wrong
                 String body = response.body().string();
                 lxdResponse = JSON_MAPPER.readValue(body, typeReference);
             } catch (IOException e) {
@@ -167,18 +164,18 @@ public class RequestContext implements AutoCloseable {
                 }
                 throw new LxdExceptionBuilder(request).with(lxdResponse).build();
             }
-            if (lxdResponse.getType() != responseType) {
-                throw new LxdExceptionBuilder(request).withMessage(String.format("got bad response type, expected %s got %s", responseType, lxdResponse.getType())).build();
+            if (lxdResponse.getType() != expectedResponseType) {
+                throw new LxdExceptionBuilder(request).withMessage(String.format("got bad response type, expected %s got %s", expectedResponseType, lxdResponse.getType())).build();
             }
-            return lxdResponse.getData();
+            return lxdResponse;
         }
 
-        public AsyncOperation parseAsyncOperation() {
-            return parse(new TypeReference<LxdResponse<AsyncOperation>>() {}, ResponseType.ASYNC);
+        public LxdResponse<Operation> parseOperation(ResponseType expectedResponseType) {
+            return parse(new TypeReference<LxdResponse<Operation>>() {}, expectedResponseType);
         }
 
         public  <T> T parseSync(TypeReference<LxdResponse<T>> typeReference) {
-            return parse(typeReference, ResponseType.SYNC);
+            return parse(typeReference, ResponseType.SYNC).getData();
         }
 
         protected void assertHttpResponseCodes() {

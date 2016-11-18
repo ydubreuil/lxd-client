@@ -1,10 +1,11 @@
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.AsyncOperation;
+import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ContainerAction;
 import com.cloudbees.lxd.client.api.ContainerInfo;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.ImageInfo;
+import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.ServerState;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Test;
@@ -66,8 +67,10 @@ public class DefaultLXDClientTest {
             .build()) {
 
             ContainerInfo containerInfo = t.client.containerInfo("it-957d09c12a9");
-            assertEquals(AsyncOperation.Status.Stopped.getValue(), containerInfo.getStatusCode().intValue());
-            t.client.containerAction("it-957d09c12a9", ContainerAction.Start, 0, false, false);
+            assertEquals(Operation.Status.Stopped.getValue(), containerInfo.getStatusCode().intValue());
+            LxdResponse<Operation> operation = t.client.containerAction("it-957d09c12a9", ContainerAction.Start, 0, false, false);
+            LxdResponse<Operation> finishedOperation = t.client.waitForCompletion(operation);
+            assertEquals(Operation.Status.Success.getValue(), finishedOperation.getStatusCode().intValue());
         }
     }
 }

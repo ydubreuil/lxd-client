@@ -1,12 +1,12 @@
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.AsyncOperation;
+import com.cloudbees.lxd.client.api.LxdResponse;
+import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.ImageInfo;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Paths;
@@ -39,7 +39,7 @@ public class DefaultLXDClientTestIT {
     @Test
     public void createContainer() {
         final String name = "it-" + Long.toHexString(System.nanoTime());
-        AsyncOperation container = client.containerInit(name, "ubuntu", "16.04", null, null, null, true);
+        LxdResponse<Operation> container = client.containerInit(name, "ubuntu", "16.04", null, null, null, true);
         System.out.println(ToStringBuilder.reflectionToString(container));
     }
 }

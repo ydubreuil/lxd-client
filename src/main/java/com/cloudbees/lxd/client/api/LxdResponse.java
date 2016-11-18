@@ -57,7 +57,7 @@ public class LxdResponse<E> {
         return operationUrl;
     }
 
-    public void setOperationUrl(String AsyncOperation) {
+    public void setOperationUrl(String operationUrl) {
         this.operationUrl = operationUrl;
     }
 
