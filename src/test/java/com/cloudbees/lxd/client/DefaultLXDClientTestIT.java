@@ -13,6 +13,8 @@ import org.junit.Test;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class DefaultLXDClientTestIT {
 
     DefaultLXDClient client;
@@ -42,14 +44,18 @@ public class DefaultLXDClientTestIT {
         final String name = "it-" + Long.toHexString(System.nanoTime());
         LxdResponse<Operation> containerCreation = client.containerInit(name, "ubuntu", "16.04", null, null, null, true);
         LxdResponse<Operation> containerCreated = client.waitForCompletion(containerCreation);
+        assertEquals(Operation.Status.Success.getValue(), containerCreated.getStatusCode().intValue());
 
         LxdResponse<Operation> containerStart = client.containerAction(name, ContainerAction.Start, 0, false, false);
         LxdResponse<Operation> containerStarted = client.waitForCompletion(containerStart);
+        assertEquals(Operation.Status.Success.getValue(), containerStarted.getStatusCode().intValue());
 
         LxdResponse<Operation> containerStop = client.containerAction(name, ContainerAction.Stop, 0, false, false);
         LxdResponse<Operation> containerStopped = client.waitForCompletion(containerStop);
+        assertEquals(Operation.Status.Success.getValue(), containerStopped.getStatusCode().intValue());
 
         LxdResponse<Operation> containerDelete = client.containerDelete(name);
         LxdResponse<Operation> containerDeleted = client.waitForCompletion(containerDelete);
+        assertEquals(Operation.Status.Success.getValue(), containerDeleted.getStatusCode().intValue());
     }
 }
