@@ -1,0 +1,22 @@
+{
+    "type": "async",
+    "status": "Operation created",
+    "status_code": 100,
+    "metadata": {
+        "id": "f96471ce-5689-433b-b382-cd1f5fbc669c",
+        "class": "task",
+        "created_at": "2016-11-18T13:01:25.679471689Z",
+        "updated_at": "2016-11-18T13:01:25.679471689Z",
+        "status": "Running",
+        "status_code": 103,
+        "resources": {
+            "containers": [
+                "/1.0/containers/it-957d09c12a9"
+            ]
+        },
+        "metadata": null,
+        "may_cancel": false,
+        "err": ""
+    },
+    "operation": "/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c"
+}

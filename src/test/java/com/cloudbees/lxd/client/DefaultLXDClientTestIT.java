@@ -4,6 +4,7 @@ import com.cloudbees.lxd.client.api.AsyncOperation;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.ImageInfo;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,11 +21,12 @@ public class DefaultLXDClientTestIT {
         client = new DefaultLXDClient(Config.localAccessConfig(Paths.get("lxd.socket").toAbsolutePath().toString()));
     }
 
-    @Ignore
     @Test
     public void miscOptions() {
-        System.out.println(client.listContainers());
-        System.out.println(client.serverStatus());
+        System.out.println(client.listContainers().stream()
+            .map(containerInfo -> ToStringBuilder.reflectionToString(containerInfo, ToStringStyle.MULTI_LINE_STYLE))
+            .reduce("", String::concat));
+        System.out.println(ToStringBuilder.reflectionToString(client.serverStatus(), ToStringStyle.MULTI_LINE_STYLE));
     }
 
     @Test
@@ -36,7 +38,8 @@ public class DefaultLXDClientTestIT {
 
     @Test
     public void createContainer() {
-        AsyncOperation container = client.containerInit("nico-canard", "ubuntu", "16.04", null, null, null, true);
+        final String name = "it-" + Long.toHexString(System.nanoTime());
+        AsyncOperation container = client.containerInit(name, "ubuntu", "16.04", null, null, null, true);
         System.out.println(ToStringBuilder.reflectionToString(container));
     }
 }

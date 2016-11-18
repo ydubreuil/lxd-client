@@ -33,30 +33,53 @@ public class TestHelper implements AutoCloseable {
         server.shutdown();
     }
 
+    @FunctionalInterface
+    public interface MockResponseBuilder {
+        MockResponse apply(RecordedRequest request) throws IOException;
+    }
+
     public static class Builder {
         final MockWebServer server = new MockWebServer();
-        final Map<String, Buffer> dispatchedJsonData = new HashMap<>();
+        final Map<String, MockResponseBuilder> urlDispatchers = new HashMap<>();
 
         public Builder dispatchJsonString(String targetUrl, String body) {
-            dispatchedJsonData.put(targetUrl, new Buffer().writeUtf8(body));
-            return this;
+            return dispatchForUrl(targetUrl,
+                r ->  new MockResponse().setResponseCode(200).setBody(new Buffer().writeUtf8(body)).setHeader("Content-Type", "application/json; charset=utf-8"));
         }
 
         public Builder dispatchJsonFile(String targetUrl, String classpathResourcePath) throws IOException {
+            return dispatchJsonFile(targetUrl, classpathResourcePath, 200);
+        }
+
+        public Builder dispatchJsonFile(String targetUrl, String classpathResourcePath, int responseCode) throws IOException {
+            return dispatchForUrl(targetUrl,
+                r ->  new MockResponse().setResponseCode(responseCode).setBody(fillBufferFromResource(classpathResourcePath)).setHeader("Content-Type", "application/json; charset=utf-8"));
+        }
+
+        public Builder dispatchForUrl(String targetUrl, MockResponseBuilder builder) {
+            urlDispatchers.put(targetUrl, builder);
+            return this;
+        }
+
+        public Buffer fillBufferFromResource(String classpathResourcePath) throws IOException {
             InputStream stream = getClass().getResourceAsStream(classpathResourcePath);
             if (stream == null) {
                 throw new IllegalArgumentException("Resource "+classpathResourcePath+" not found in classpath");
             }
-            dispatchedJsonData.put(targetUrl, new Buffer().readFrom(stream));
-            return this;
+            return new Buffer().readFrom(stream);
         }
 
         public Dispatcher buildJsonDispatcher() {
             return new Dispatcher() {
                 @Override
                 public MockResponse dispatch(RecordedRequest request) throws InterruptedException {
-                    if (dispatchedJsonData.containsKey(request.getPath())) {
-                        return new MockResponse().setResponseCode(200).setBody(dispatchedJsonData.get(request.getPath())).setHeader("Content-Type", "application/json; charset=utf-8");
+                    // we currently don't check if the HTTP method used in the good one...
+                    if (urlDispatchers.containsKey(request.getPath())) {
+                        try {
+                            return urlDispatchers.get(request.getPath()).apply(request);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                     return new MockResponse().setResponseCode(500);
                 }
@@ -69,7 +92,7 @@ public class TestHelper implements AutoCloseable {
         }
 
         TestHelper build() throws IOException {
-            if (dispatchedJsonData.size() > 0) {
+            if (urlDispatchers.size() > 0) {
                 server.setDispatcher(buildJsonDispatcher());
             }
             return new TestHelper(server);

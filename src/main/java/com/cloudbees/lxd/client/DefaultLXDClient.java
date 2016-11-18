@@ -120,7 +120,7 @@ public class DefaultLXDClient implements AutoCloseable {
                 body.put("stateful", stateful);
         }
 
-        return ctx.put("containers").body(body).build().expect(202).execute().parseAsyncOperation();
+        return ctx.put(format("containers/%s/state", name)).body(body).build().expect(202).execute().parseAsyncOperation();
     }
 
     public AsyncOperation containerDelete(String name, ContainerAction action, int timeout, boolean force, boolean stateful) {

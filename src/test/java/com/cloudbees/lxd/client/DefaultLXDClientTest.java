@@ -1,5 +1,8 @@
 package com.cloudbees.lxd.client;
 
+import com.cloudbees.lxd.client.api.AsyncOperation;
+import com.cloudbees.lxd.client.api.ContainerAction;
+import com.cloudbees.lxd.client.api.ContainerInfo;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.ImageInfo;
 import com.cloudbees.lxd.client.api.ServerState;
@@ -51,6 +54,20 @@ public class DefaultLXDClientTest {
             ImageInfo imageInfo = t.client.imageInfo(imageAliasesEntry.getTarget());
 
             assertEquals(imageAliasesEntry.getTarget(), imageInfo.getFingerprint());
+        }
+    }
+
+    @Test
+    public void containerStartTest() throws IOException, InterruptedException {
+        try (TestHelper t = new TestHelper.Builder()
+            .dispatchJsonFile("/1.0/containers/it-957d09c12a9", "operations/start/container.json")
+            .dispatchJsonFile("/1.0/containers/it-957d09c12a9/state", "operations/start/state.json", 202)
+            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait", "operations/start/operation.json", 202)
+            .build()) {
+
+            ContainerInfo containerInfo = t.client.containerInfo("it-957d09c12a9");
+            assertEquals(AsyncOperation.Status.Stopped.getValue(), containerInfo.getStatusCode().intValue());
+            t.client.containerAction("it-957d09c12a9", ContainerAction.Start, 0, false, false);
         }
     }
 }
