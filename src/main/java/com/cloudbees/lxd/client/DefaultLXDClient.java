@@ -123,16 +123,15 @@ public class DefaultLXDClient implements AutoCloseable {
         return ctx.put(format("1.0/containers/%s/state", name)).body(body).build().expect(202).execute().parseOperation(ResponseType.ASYNC);
     }
 
-    public LxdResponse<Operation> containerDelete(String name, ContainerAction action, int timeout, boolean force, boolean stateful) {
+    public LxdResponse<Operation> containerDelete(String name) {
         String[] slashSplitted = name.split("/", 1);
         String url = slashSplitted.length == 1 ? format("1.0/containers/%s", name) : format("containers/%s/snapshots/%s", slashSplitted[0], slashSplitted[1]);
         return ctx.delete(url).build().expect(202).execute().parseOperation(ResponseType.ASYNC);
     }
 
     public LxdResponse<Operation> waitForCompletion(LxdResponse<Operation> operationResponse) {
-        return ctx.get(format("%s/wait", operationResponse.getOperationUrl())).build().expect(202).execute().parseOperation(ResponseType.SYNC);
+        return ctx.get(format("%s/wait?timeout=30", operationResponse.getOperationUrl())).build().expect(200).execute().parseOperation(ResponseType.SYNC);
     }
-
 
     public List<ImageInfo> listImages() {
         return ctx.get("1.0/images" + RECURSION_SUFFIX).build().execute().parseSync(new TypeReference<LxdResponse<List<ImageInfo>>>() {});

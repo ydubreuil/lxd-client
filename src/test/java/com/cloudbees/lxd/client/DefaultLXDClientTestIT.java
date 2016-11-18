@@ -1,5 +1,6 @@
 package com.cloudbees.lxd.client;
 
+import com.cloudbees.lxd.client.api.ContainerAction;
 import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
@@ -37,9 +38,18 @@ public class DefaultLXDClientTestIT {
     }
 
     @Test
-    public void createContainer() {
+    public void containerSimpleLifecycle() {
         final String name = "it-" + Long.toHexString(System.nanoTime());
-        LxdResponse<Operation> container = client.containerInit(name, "ubuntu", "16.04", null, null, null, true);
-        System.out.println(ToStringBuilder.reflectionToString(container));
+        LxdResponse<Operation> containerCreation = client.containerInit(name, "ubuntu", "16.04", null, null, null, true);
+        LxdResponse<Operation> containerCreated = client.waitForCompletion(containerCreation);
+
+        LxdResponse<Operation> containerStart = client.containerAction(name, ContainerAction.Start, 0, false, false);
+        LxdResponse<Operation> containerStarted = client.waitForCompletion(containerStart);
+
+        LxdResponse<Operation> containerStop = client.containerAction(name, ContainerAction.Stop, 0, false, false);
+        LxdResponse<Operation> containerStopped = client.waitForCompletion(containerStop);
+
+        LxdResponse<Operation> containerDelete = client.containerDelete(name);
+        LxdResponse<Operation> containerDeleted = client.waitForCompletion(containerDelete);
     }
 }
