@@ -130,7 +130,7 @@ public class DefaultLXDClient implements AutoCloseable {
     }
 
     public LxdResponse<Operation> waitForCompletion(LxdResponse<Operation> operationResponse) {
-        return ctx.get(format("%s/wait?timeout=30", operationResponse.getOperationUrl())).build().expect(200).execute().parseOperation(ResponseType.SYNC);
+        return ctx.get(format("%s/wait?timeout=30", operationResponse.getOperationUrl())).build().expect(200).execute().parseOperation(null);
     }
 
     public List<ImageInfo> listImages() {

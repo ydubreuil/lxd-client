@@ -164,7 +164,7 @@ public class RequestContext implements AutoCloseable {
                 }
                 throw new LxdExceptionBuilder(request).with(lxdResponse).build();
             }
-            if (lxdResponse.getType() != expectedResponseType) {
+            if (expectedResponseType != null && lxdResponse.getType() != expectedResponseType) {
                 throw new LxdExceptionBuilder(request).withMessage(String.format("got bad response type, expected %s got %s", expectedResponseType, lxdResponse.getType())).build();
             }
             return lxdResponse;
