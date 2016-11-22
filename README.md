@@ -18,11 +18,27 @@ The root of this repos contains a Vagrantfile to start a VM with LXD. To launch 
 Then, just run:
 
     vagrant init
-    vagrant ssh -- -L${PWD}/lxd.socket:/var/lib/lxd/unix.socket
 
-Keep the SSH command open to access the LXD control socket from your computer. If it fails, remove the stale socket file:
+This will launch a Ubuntu VM with LXD on it.
+
+To integrate the VM with your local development environment, you can run:
+
+    vagrant ssh -- -L${PWD}/lxd.socket:/var/lib/lxd/unix.socket -D 1080
+
+to forward the LXD socket to a local file and publish an SOCK5 proxy with will let you jump into the box easily
+
+Keep command running to access the LXD control socket from your computer. If it fails, remove the stale socket file:
 
     rm lxd.socket
+
+### Configuring LXD in the Vagrant box
+
+`lxcbr0` is not configured by default, so containers don't have network. To reconfigure the bridge and add some IPv4 or
+IPv6 subnet to it, you can run inside the Vagrant box:
+
+    sudo dpkg-reconfigure -p medium lxd
+
+More detailed configuration step in this blog post: [LXD 2.0: Installing and configuring LXD](https://www.stgraber.org/2016/03/15/lxd-2-0-installing-and-configuring-lxd-212/)
 
 ## Debugging tips
 
@@ -58,3 +74,8 @@ You can then capture the TCP stream and write them to a pcap file
     # start packet capture on said port
     tcpdump -i lo -w capture.pcap  port 6000 and host localhost
 
+### Connect to a container using SSH
+
+To connect to a container inside the Vagrant box from the host, you can leverage the SOCKS5 proxy to jump into the box, like this:
+
+    ssh -o ProxyCommand='nc -x localhost:1080 %h %p' ubuntu@<IP_ADDRESS_OF_CONTAINER>
