@@ -127,9 +127,9 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
         public Single<ResponseContext> newCall(Request.Builder requestBuilder) {
             requestBuilder.url(resourceUrl);
             Request request = requestBuilder.build();
-            Call call = client.newCall(request);
 
             return Single.create(s -> {
+                Call call = client.newCall(request);
                 call.enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call1, IOException e) {

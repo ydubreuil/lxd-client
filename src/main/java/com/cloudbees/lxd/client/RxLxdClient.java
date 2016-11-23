@@ -153,7 +153,7 @@ public class RxLxdClient implements AutoCloseable {
                 body.put("ephem", ephem);
             }
 
-            return wrapWait(rxClient.put(format("1.0/containers", containerName)).body(json(body)).build()
+            return wrapWait(rxClient.post(format("1.0/containers", containerName)).body(json(body)).build()
                 .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, Arrays.asList(202)))));
         }
 
@@ -222,9 +222,15 @@ public class RxLxdClient implements AutoCloseable {
             .flatMap(rc -> Single.just(parseOperation(rc, null, Arrays.asList(new Integer(200))).getData()));
     }
 
-    // simple for now, but will get more complicated with retry and so on
     protected Single<Operation> wrapWait(Single<LxdResponse<Operation>> lxdResponse) {
-        return lxdResponse.flatMap(operation -> waitForCompletion(operation));
+        return lxdResponse.flatMap(operation -> {
+            switch(operation.getStatusCode()) {
+                case 200:
+                    return Single.just(operation.getData());
+                default:
+                    return waitForCompletion(operation);
+            }
+        });
     }
 
     protected RequestBody json(Object resource) {
