@@ -222,6 +222,12 @@ public class RxLxdClient implements AutoCloseable {
             .flatMap(rc -> Single.just(parseOperation(rc, null, Arrays.asList(new Integer(200))).getData()));
     }
 
+
+    /*
+        Warning!!!!
+        This blog post, https://www.stgraber.org/2016/04/18/lxd-api-direct-interaction/
+        says that "data about past operations disappears 5 seconds after they’re done."
+     */
     protected Single<Operation> wrapWait(Single<LxdResponse<Operation>> lxdResponse) {
         return lxdResponse.flatMap(operation -> {
             switch(operation.getStatusCode()) {
