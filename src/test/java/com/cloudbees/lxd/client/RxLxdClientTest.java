@@ -1,9 +1,7 @@
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.ContainerAction;
 import com.cloudbees.lxd.client.api.ContainerInfo;
 import com.cloudbees.lxd.client.api.ImageInfo;
-import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ServerState;
 import okhttp3.mockwebserver.MockResponse;
@@ -50,6 +48,21 @@ public class RxLxdClientTest {
         }
     }
 
+    @Test
+    public void containerStartTest() throws Exception {
+        try (TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0/containers/it-957d09c12a9", "operations/start/container.json")
+            .dispatchJsonFile("/1.0/containers/it-957d09c12a9/state", "operations/start/state.json", 202)
+            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait", "operations/start/operation.json")
+            .build();
+             RxLxdClient client = new RxLxdClient(t.getConfig())
+        ) {
+            RxLxdClient.Container container = client.container("it-957d09c12a9");
+            ContainerInfo containerInfo = container.info().blockingGet();
+            assertEquals(Operation.Status.Stopped.getValue(), containerInfo.getStatusCode().intValue());
+            Operation start = container.start(0, false, false).blockingGet();
+            assertEquals(Operation.Status.Success, start.getStatusCode());
+        }
+    }
 
     @Test
     public void imagesListTest() throws Exception {
