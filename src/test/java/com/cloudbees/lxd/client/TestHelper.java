@@ -19,18 +19,21 @@ import java.util.function.Function;
 public class TestHelper implements AutoCloseable {
 
     public final MockWebServer server;
-    public final DefaultLXDClient client;
+    final HttpUrl baseUrl;
 
     TestHelper(MockWebServer server) throws IOException {
         this.server = server;
         server.start();
-        HttpUrl baseUrl = server.url("/");
-        client = new DefaultLXDClient(Config.remoteAccessConfig(baseUrl.toString()));
+        baseUrl = server.url("/");
     }
 
     @Override
     public void close() throws IOException {
         server.shutdown();
+    }
+
+    public Config getConfig() {
+        return Config.remoteAccessConfig(baseUrl.toString());
     }
 
     @FunctionalInterface
