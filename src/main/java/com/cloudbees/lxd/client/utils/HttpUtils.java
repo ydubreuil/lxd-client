@@ -4,6 +4,14 @@ import com.cloudbees.lxd.client.Config;
 import com.cloudbees.lxd.client.utils.unix.UnixSocketFactory;
 import okhttp3.OkHttpClient;
 
+import javax.net.ssl.SSLContext;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.TimeUnit;
 
 public class HttpUtils {
@@ -20,8 +28,15 @@ public class HttpUtils {
         if (config.useUnixTransport()) {
             UnixSocketFactory socketFactory = new UnixSocketFactory(config.getUnixSocketPath());
             httpClientBuilder.socketFactory(socketFactory);
-        } else {
-            // httpClientBuilder.sslSocketFactory(SSLUtils.getSocketFactory(config), SSLUtils.getTrustManager(config));
+        } else if (config.getBaseURL().startsWith("https")) {
+            SSLContext sslContext = null;
+            try {
+                sslContext = SSLUtils.sslContext(config);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            httpClientBuilder.socketFactory(sslContext.getSocketFactory());
         }
 
         return httpClientBuilder.build();

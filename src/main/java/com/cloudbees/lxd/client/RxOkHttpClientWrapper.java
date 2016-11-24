@@ -5,11 +5,8 @@ import com.cloudbees.lxd.client.utils.URLUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeObserver;
+import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.SingleSource;
 import io.reactivex.disposables.Disposable;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -21,6 +18,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class RxOkHttpClientWrapper implements AutoCloseable {
@@ -76,16 +75,16 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
         return new RequestBuilder(buildResourceUrl(resourceUrlBuilder), "GET");
     }
 
-    public RequestBuilder post(String resourceUrl) {
-        return new RequestBuilder(buildResourceUrl(resourceUrl), "POST");
+    public RequestBuilder post(String resourceUrl, RequestBody body) {
+        return new RequestBuilder(buildResourceUrl(resourceUrl), "POST", body);
     }
 
-    public RequestBuilder post(Function<HttpUrl.Builder, HttpUrl.Builder> resourceUrlBuilder) {
-        return new RequestBuilder(buildResourceUrl(resourceUrlBuilder), "POST");
+    public RequestBuilder post(Function<HttpUrl.Builder, HttpUrl.Builder> resourceUrlBuilder, RequestBody body) {
+        return new RequestBuilder(buildResourceUrl(resourceUrlBuilder), "POST", body);
     }
 
-    public RequestBuilder put(String resourceUrl) {
-        return new RequestBuilder(buildResourceUrl(resourceUrl), "PUT");
+    public RequestBuilder put(String resourceUrl, RequestBody body) {
+        return new RequestBuilder(buildResourceUrl(resourceUrl), "PUT", body);
     }
 
     public RequestBuilder delete(String resourceUrl) {
@@ -102,21 +101,20 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             this.resourceUrl = resourceUrl;
         }
 
-        public Single<ResponseContext> build(Function<Request.Builder, Request.Builder> f) {
-            return newCall(f.apply(new Request.Builder().method(method, body)).addHeader("User-Agent", "LXD-Java-Client"));
+        RequestBuilder(HttpUrl resourceUrl, String method, RequestBody body) {
+            this.method = method;
+            this.resourceUrl = resourceUrl;
+            this.body = body;
         }
 
-        public Single<ResponseContext> build() {
+        public Single<TupleCallResponse> build(Function<Request.Builder, Request.Builder> f) {
+            return call(f.apply(new Request.Builder().method(method, body))
+                .addHeader("User-Agent", "LXD-Java-Client")
+                .url(resourceUrl));
+        }
+
+        public Single<TupleCallResponse> build() {
             return build(Function.identity());
-        }
-
-        public RequestBuilder jsonBody(Object resource) {
-            try {
-                body = RequestBody.create(MEDIA_TYPE_JSON, JSON_MAPPER.writeValueAsString(resource));
-            } catch (JsonProcessingException e) {
-                throw new LxdClientException(e);
-            }
-            return this;
         }
 
         public RequestBuilder body(RequestBody body) {
@@ -124,8 +122,7 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             return this;
         }
 
-        public Single<ResponseContext> newCall(Request.Builder requestBuilder) {
-            requestBuilder.url(resourceUrl);
+        protected Single<TupleCallResponse> call(Request.Builder requestBuilder) {
             Request request = requestBuilder.build();
 
             return Single.create(s -> {
@@ -133,12 +130,12 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
                 call.enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call1, IOException e) {
-                        s.onError(new CallException(call1, e));
+                        s.onError(new HttpException(call1, e));
                     }
 
                     @Override
                     public void onResponse(Call call1, Response response) throws IOException {
-                        s.onSuccess(new ResponseContext(call1, response));
+                        s.onSuccess(new TupleCallResponse(call1, response));
                     }
                 });
 
@@ -157,22 +154,22 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
         }
     }
 
-    public static class CallException extends Exception {
-        public final Call call;
-
-        private CallException(Call call, Throwable t) {
-            super(t);
-            this.call = call;
-        }
-    }
-
-    public static class ResponseContext {
+    public static class TupleCallResponse {
         public final Call call;
         public final Response response;
 
-        private ResponseContext(Call call, Response response) {
+        private TupleCallResponse(Call call, Response response) {
             this.call = call;
             this.response = response;
+        }
+    }
+
+    public static class HttpException extends Exception {
+        public final Call call;
+
+        private HttpException(Call call, Throwable t) {
+            super(t);
+            this.call = call;
         }
     }
 }

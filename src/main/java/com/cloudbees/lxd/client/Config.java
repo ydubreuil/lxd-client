@@ -20,15 +20,15 @@ public class Config {
     /** PEM encoded private bytes of the client's key associated with its certificate */
     private String clientPEMKey;
 
-    /** PEM encoded client certificate authority (if any) */
-    private String clientPEMCa;
+    /** Password to decrypt the PEM encoded private bytes */
+    private String clientPEMKeyPassword;
 
-    private Config(String baseURL, String unixSocketPath, String clientPEMCert, String clientPEMKey, String clientPEMCa) {
+    private Config(String baseURL, String unixSocketPath, String clientPEMCert, String clientPEMKey, String clientPEMKeyPassword) {
         this.baseURL = baseURL;
         this.unixSocketPath = unixSocketPath;
         this.clientPEMCert = clientPEMCert;
         this.clientPEMKey = clientPEMKey;
-        this.clientPEMCa = clientPEMCa;
+        this.clientPEMKeyPassword = clientPEMKeyPassword;
 
         // from https://github.com/lxc/lxd/blob/34f62a7ea5cfea0f640ceb16ffc49a8f7c206c6c/config.go#L54
         remotesURL.put("images", "https://images.linuxcontainers.org");
@@ -60,8 +60,8 @@ public class Config {
         return clientPEMKey;
     }
 
-    public String getClientPEMCa() {
-        return clientPEMCa;
+    public String getClientPEMKeyPassphrase() {
+        return clientPEMKeyPassword;
     }
 
     public Map<String, String> getRemotesURL() {

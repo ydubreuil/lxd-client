@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2016 Original Authors
+ * Copyright (C) 2016 Fabric8IO
+ * Copyright (C) 2016 CloudBees
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +16,13 @@
  * limitations under the License.
  *
  */
+
 package com.cloudbees.lxd.client.utils;
 
 import okio.ByteString;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,104 +42,100 @@ import java.security.spec.RSAPrivateCrtKeySpec;
 
 public class CertUtils {
 
-  public static InputStream getInputStreamFromDataOrFile(String data, String file) throws FileNotFoundException {
-    if (data != null) {
-      byte[] bytes = null;
-      ByteString decoded = ByteString.decodeBase64(data);
-      if (decoded != null) {
-          bytes = decoded.toByteArray();
-      } else {
-          bytes = data.getBytes();
-      }
-
-      return new ByteArrayInputStream(bytes);
-    }
-    if (file != null) {
-      return new FileInputStream(file);
-    }
-    return null;
-  }
-
-  public static KeyStore createTrustStore(String caCertData, String caCertFile) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
-    try (InputStream pemInputStream = getInputStreamFromDataOrFile(caCertData, caCertFile)) {
-      return createTrustStore(pemInputStream);
-    }
-  }
-
-  public static KeyStore createTrustStore(InputStream pemInputStream) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
-      CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-      X509Certificate cert = (X509Certificate) certFactory.generateCertificate(pemInputStream);
-
-      KeyStore trustStore = KeyStore.getInstance("JKS");
-      trustStore.load(null);
-
-      String alias = cert.getSubjectX500Principal().getName();
-      trustStore.setCertificateEntry(alias, cert);
-      return trustStore;
-  }
-
-
-  public static KeyStore createKeyStore(InputStream certInputStream, InputStream keyInputStream, String clientKeyAlgo, char[] clientKeyPassphrase) throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, KeyStoreException {
-      CertificateFactory certFactory = CertificateFactory.getInstance("X509");
-      X509Certificate cert = (X509Certificate) certFactory.generateCertificate(certInputStream);
-
-      byte[] keyBytes = decodePem(keyInputStream);
-
-      PrivateKey privateKey;
-
-      KeyFactory keyFactory = KeyFactory.getInstance(clientKeyAlgo);
-      try {
-        // First let's try PKCS8
-        privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
-      } catch (InvalidKeySpecException e) {
-        // Otherwise try PKCS8
-        RSAPrivateCrtKeySpec keySpec = PKCS1Util.decodePKCS1(keyBytes);
-        privateKey = keyFactory.generatePrivate(keySpec);
-      }
-
-      KeyStore keyStore = KeyStore.getInstance("JKS");
-      keyStore.load(null, clientKeyPassphrase);
-
-      String alias = cert.getSubjectX500Principal().getName();
-      keyStore.setKeyEntry(alias, privateKey, clientKeyPassphrase, new Certificate[]{cert});
-
-      return keyStore;
-  }
-
-  public static KeyStore createKeyStore(String clientCertData, String clientCertFile, String clientKeyData, String clientKeyFile, String clientKeyAlgo, char[] clientKeyPassphrase) throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, KeyStoreException {
-    try (InputStream certInputStream = getInputStreamFromDataOrFile(clientCertData, clientCertFile); InputStream keyInputStream = getInputStreamFromDataOrFile(clientKeyData, clientKeyFile)) {
-      return createKeyStore(certInputStream, keyInputStream, clientKeyAlgo, clientKeyPassphrase);
-    }
-  }
-
-  // This method is inspired and partly taken over from
-  // http://oauth.googlecode.com/svn/code/java/
-  // All credits to belong to them.
-  private static byte[] decodePem(InputStream keyInputStream) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(keyInputStream));
-    try {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        if (line.contains("-----BEGIN ")) {
-          return readBytes(reader, line.trim().replace("BEGIN", "END"));
+    public static InputStream decodeB64(String data) throws FileNotFoundException {
+        byte[] bytes = null;
+        ByteString decoded = ByteString.decodeBase64(data);
+        if (decoded != null) {
+            bytes = decoded.toByteArray();
+        } else {
+            bytes = data.getBytes();
         }
-      }
-      throw new IOException("PEM is invalid: no begin marker");
-    } finally {
-      reader.close();
-    }
-  }
 
-  private static byte[] readBytes(BufferedReader reader, String endMarker) throws IOException {
-    String line;
-    StringBuffer buf = new StringBuffer();
-
-    while ((line = reader.readLine()) != null) {
-      if (line.indexOf(endMarker) != -1) {
-        return ByteString.decodeBase64(buf.toString()).toByteArray();
-      }
-      buf.append(line.trim());
+        return new ByteArrayInputStream(bytes);
     }
-    throw new IOException("PEM is invalid : No end marker");
-  }
+
+    public static KeyStore createTrustStore(String caCertData) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
+        try (InputStream pemInputStream = decodeB64(caCertData)) {
+            return createTrustStore(pemInputStream);
+        }
+    }
+
+    public static KeyStore createTrustStore(InputStream pemInputStream) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
+        CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+        X509Certificate cert = (X509Certificate) certFactory.generateCertificate(pemInputStream);
+
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(null);
+
+        String alias = cert.getSubjectX500Principal().getName();
+        trustStore.setCertificateEntry(alias, cert);
+        return trustStore;
+    }
+
+
+    public static KeyStore createKeyStore(InputStream certInputStream, InputStream keyInputStream, String clientKeyAlgo, char[] clientKeyPassphrase) throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, KeyStoreException {
+        CertificateFactory certFactory = CertificateFactory.getInstance("X509");
+        X509Certificate cert = (X509Certificate) certFactory.generateCertificate(certInputStream);
+
+        byte[] keyBytes = decodePem(keyInputStream);
+
+        PrivateKey privateKey;
+
+        KeyFactory keyFactory = KeyFactory.getInstance(clientKeyAlgo);
+        try {
+            // First let's try PKCS8
+            privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(keyBytes));
+        } catch (InvalidKeySpecException e) {
+            // Otherwise try PKCS1
+            RSAPrivateCrtKeySpec keySpec = PKCS1Util.decodePKCS1(keyBytes);
+            privateKey = keyFactory.generatePrivate(keySpec);
+        }
+
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        keyStore.load(null, clientKeyPassphrase);
+
+        String alias = cert.getSubjectX500Principal().getName();
+        keyStore.setKeyEntry(alias, privateKey, clientKeyPassphrase, new Certificate[]{cert});
+
+        return keyStore;
+    }
+
+    public static KeyStore createKeyStore(String clientCertData, String clientKeyData, String clientKeyAlgo, char[] clientKeyPassphrase) throws IOException, CertificateException, NoSuchAlgorithmException, InvalidKeySpecException, KeyStoreException {
+        try (InputStream certInputStream = decodeB64(clientCertData);
+             InputStream keyInputStream = decodeB64(clientKeyData)
+        ) {
+            return createKeyStore(certInputStream, keyInputStream, clientKeyAlgo, clientKeyPassphrase);
+        }
+    }
+
+    // This method is inspired and partly taken over from
+    // http://oauth.googlecode.com/svn/code/java/
+    // All credits to belong to them.
+    private static byte[] decodePem(InputStream keyInputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(keyInputStream));
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("-----BEGIN ")) {
+                    return readBytes(reader, line.trim().replace("BEGIN", "END"));
+                }
+            }
+            throw new IOException("PEM is invalid: no begin marker");
+        } finally {
+            reader.close();
+        }
+    }
+
+    private static byte[] readBytes(BufferedReader reader, String endMarker) throws IOException {
+        String line;
+        StringBuffer buf = new StringBuffer();
+
+        while ((line = reader.readLine()) != null) {
+            if (line.indexOf(endMarker) != -1) {
+                return ByteString.decodeBase64(buf.toString()).toByteArray();
+            }
+            buf.append(line.trim());
+        }
+        throw new IOException("PEM is invalid : No end marker");
+    }
 }

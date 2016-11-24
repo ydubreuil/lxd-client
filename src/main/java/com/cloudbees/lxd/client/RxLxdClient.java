@@ -16,7 +16,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -29,9 +31,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.lang.String.format;
-
 
 /**
  * Asynchronous LXD client based on RxJava.
@@ -64,12 +66,12 @@ public class RxLxdClient implements AutoCloseable {
 
     public Single<ServerState> serverState() {
         return rxClient.get("1.0").build()
-            .flatMap(rc -> parseSyncSingle(rc, new TypeReference<LxdResponse<ServerState>>() {}));
+            .flatMap(cr -> parseSyncSingle(cr, new TypeReference<LxdResponse<ServerState>>() {}));
     }
 
     public Single<List<ContainerInfo>> containers() {
         return rxClient.get("1.0/containers" + RECURSION_SUFFIX).build()
-            .flatMap(rc -> parseSyncSingle(rc, new TypeReference<LxdResponse<List<ContainerInfo>>>() {}));
+            .flatMap(cr -> parseSyncSingle(cr, new TypeReference<LxdResponse<List<ContainerInfo>>>() {}));
     }
 
     public Container container(String name) {
@@ -95,18 +97,23 @@ public class RxLxdClient implements AutoCloseable {
                     body.put("stateful", stateful);
             }
 
-            return wrapWait(rxClient.put(format("1.0/containers/%s/state", containerName)).body(json(body)).build()
-                    .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, Arrays.asList(202)))));
+            return rxClient.put(format("1.0/containers/%s/state", containerName), json(body)).build()
+                    .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, 202)))
+                    .flatMap(o -> waitForCompletion(o));
         }
 
         public Completable delete() {
-            return wrapWait(rxClient.delete(format("1.0/containers/%s", containerName)).build()
-                .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, Arrays.asList(202))))).toCompletable();
+            return rxClient.delete(format("1.0/containers/%s", containerName)).build()
+                .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o))
+                .toCompletable();
         }
 
         public Completable deleteSnapshot(String snapshotName) {
-            return wrapWait(rxClient.delete(format("1.0/containers/%s/snapshots/%s", containerName, snapshotName)).build()
-                .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, Arrays.asList(202))))).toCompletable();
+            return rxClient.delete(format("1.0/containers/%s/snapshots/%s", containerName, snapshotName)).build()
+                .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o))
+                .toCompletable();
         }
 
         public Maybe<ContainerInfo> info() {
@@ -153,8 +160,9 @@ public class RxLxdClient implements AutoCloseable {
                 body.put("ephem", ephem);
             }
 
-            return wrapWait(rxClient.post(format("1.0/containers", containerName)).body(json(body)).build()
-                .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, Arrays.asList(202)))));
+            return rxClient.post(format("1.0/containers", containerName), json(body)).build()
+                .flatMap(rc -> Single.just(parseOperation(rc, ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
         public Single<Operation> start(int timeout, boolean force, boolean stateful) {
@@ -174,8 +182,8 @@ public class RxLxdClient implements AutoCloseable {
             return rxClient
                 .post(urlBuilder -> urlBuilder
                     .addPathSegment("1.0/containers").addPathSegment(containerName).addPathSegment("files")
-                    .addEncodedQueryParameter("path", targetPath))
-                .body(body)
+                    .addEncodedQueryParameter("path", targetPath),
+                    body)
                 .build(requestBuilder -> requestBuilder
                     .addHeader("X-LXD-type", "file")
                     .addHeader("X-LXD-mode", mode)
@@ -191,7 +199,7 @@ public class RxLxdClient implements AutoCloseable {
 
     public Single<List<ImageInfo>> images() {
         return rxClient.get("1.0/images" + RECURSION_SUFFIX).build()
-            .flatMap(rc -> parseSyncSingle(rc, new TypeReference<LxdResponse<List<ImageInfo>>>(){}));
+            .flatMap(cr -> parseSyncSingle(cr, new TypeReference<LxdResponse<List<ImageInfo>>>(){}));
     }
 
     public Image image(String imageFingerprint) {
@@ -207,36 +215,23 @@ public class RxLxdClient implements AutoCloseable {
 
         public Maybe<ImageInfo> info() {
             return rxClient.get(format("1.0/images/%s", imageFingerprint)).build()
-                .flatMapMaybe(rc -> parseSyncMaybe(rc, new TypeReference<LxdResponse<ImageInfo>>(){}));
+                .flatMapMaybe(cr -> parseSyncMaybe(cr, new TypeReference<LxdResponse<ImageInfo>>(){}));
         }
     }
 
     public Maybe<ImageAliasesEntry> alias(String aliasName) {
         return rxClient.get(format("1.0/images/aliases/%s", aliasName)).build()
-            .flatMapMaybe(rc -> parseSyncMaybe(rc, new TypeReference<LxdResponse<ImageAliasesEntry>>(){}));
+            .flatMapMaybe(cr -> parseSyncMaybe(cr, new TypeReference<LxdResponse<ImageAliasesEntry>>(){}));
     }
-
-
-    public Single<Operation> waitForCompletion(LxdResponse<Operation> operationResponse) {
-        return rxClient.get(format("%s/wait", operationResponse.getOperationUrl())).build()
-            .flatMap(rc -> Single.just(parseOperation(rc, null, Arrays.asList(new Integer(200))).getData()));
-    }
-
 
     /*
         Warning!!!!
         This blog post, https://www.stgraber.org/2016/04/18/lxd-api-direct-interaction/
         says that "data about past operations disappears 5 seconds after they’re done."
-     */
-    protected Single<Operation> wrapWait(Single<LxdResponse<Operation>> lxdResponse) {
-        return lxdResponse.flatMap(operation -> {
-            switch(operation.getStatusCode()) {
-                case 200:
-                    return Single.just(operation.getData());
-                default:
-                    return waitForCompletion(operation);
-            }
-        });
+    */
+    public Single<Operation> waitForCompletion(LxdResponse<Operation> operationResponse) {
+        return rxClient.get(format("%s/wait?timeout=10", operationResponse.getOperationUrl())).build()
+            .flatMap(rc -> Single.just(parseOperation(rc, null, 200).getData()));
     }
 
     protected RequestBody json(Object resource) {
@@ -247,31 +242,27 @@ public class RxLxdClient implements AutoCloseable {
         }
     }
 
-    private static final List<Integer> ACCEPTABLE_HTTP_CODE_MAYBE = Arrays.asList(200, 404);
-
-    protected <T> Maybe<T> parseSyncMaybe(RxOkHttpClientWrapper.ResponseContext rc, TypeReference<LxdResponse<T>> typeReference) {
-        return Maybe.just(parse(rc, typeReference, ResponseType.SYNC, ACCEPTABLE_HTTP_CODE_MAYBE).getData());
+    protected <T> Maybe<T> parseSyncMaybe(RxOkHttpClientWrapper.TupleCallResponse cr, TypeReference<LxdResponse<T>> typeReference) {
+        return Maybe.just(parse(cr, typeReference, ResponseType.SYNC, 200, 404).getData());
     }
 
-    private static final List<Integer> ACCEPTABLE_HTTP_CODE_SINGLE = Arrays.asList(200);
-
-    protected <T> Single<T> parseSyncSingle(RxOkHttpClientWrapper.ResponseContext rc, TypeReference<LxdResponse<T>> typeReference) {
-        return Single.just(parse(rc, typeReference, ResponseType.SYNC, ACCEPTABLE_HTTP_CODE_SINGLE).getData());
+    protected <T> Single<T> parseSyncSingle(RxOkHttpClientWrapper.TupleCallResponse rc, TypeReference<LxdResponse<T>> typeReference) {
+        return Single.just(parse(rc, typeReference, ResponseType.SYNC, 200).getData());
     }
 
-    public LxdResponse<Operation> parseOperation(RxOkHttpClientWrapper.ResponseContext rc, ResponseType expectedResponseType, List<Integer> expectedHttpStatusCodes) {
-        return parse(rc, new TypeReference<LxdResponse<Operation>>() {}, expectedResponseType, expectedHttpStatusCodes);
+    public LxdResponse<Operation> parseOperation(RxOkHttpClientWrapper.TupleCallResponse cr, ResponseType expectedResponseType, int... expectedHttpStatusCodes) {
+        return parse(cr, new TypeReference<LxdResponse<Operation>>() {}, expectedResponseType, expectedHttpStatusCodes);
     }
 
-    protected <T> LxdResponse<T> parse(RxOkHttpClientWrapper.ResponseContext context, TypeReference<LxdResponse<T>> typeReference, ResponseType expectedResponseType, List<Integer> expectedHttpStatusCodes) {
-        assertHttpResponseCodes(context, expectedHttpStatusCodes);
+    protected <T> LxdResponse<T> parse(RxOkHttpClientWrapper.TupleCallResponse cr, TypeReference<LxdResponse<T>> typeReference, ResponseType expectedResponseType, int... expectedHttpStatusCodes) {
+        assertHttpResponseCodes(cr.call, cr.response, expectedHttpStatusCodes);
         LxdResponse<T> lxdResponse = null;
         try {
-            // we do not use a stream here to get the jsonBody dumped by Jackson when somethings goes wrong
-            String body = context.response.body().string();
+            // we do not use a stream here to get the jsonBody dumped by Jackson when something goes wrong
+            String body = cr.response.body().string();
             lxdResponse = JSON_MAPPER.readValue(body, typeReference);
         } catch (IOException e) {
-            throw new LxdExceptionBuilder(context.call.request()).with(context.response).with(e).build();
+            throw new LxdExceptionBuilder(cr.call.request()).with(cr.response).with(e).build();
         }
         if (lxdResponse.getType() == null || ResponseType.ERROR == lxdResponse.getType()) {
             for(int expectedStatusCode: expectedHttpStatusCodes) {
@@ -279,23 +270,23 @@ public class RxLxdClient implements AutoCloseable {
                     return null;
                 }
             }
-            throw new LxdExceptionBuilder(context.call.request()).with(lxdResponse).build();
+            throw new LxdExceptionBuilder(cr.call.request()).with(lxdResponse).build();
         }
         if (expectedResponseType != null && lxdResponse.getType() != expectedResponseType) {
-            throw new LxdExceptionBuilder(context.call.request()).withMessage(String.format("got bad response type, expected %s got %s", expectedResponseType, lxdResponse.getType())).build();
+            throw new LxdExceptionBuilder(cr.call.request()).withMessage(String.format("got bad response type, expected %s got %s", expectedResponseType, lxdResponse.getType())).build();
         }
         return lxdResponse;
     }
 
-    protected void assertHttpResponseCodes(RxOkHttpClientWrapper.ResponseContext context, List<Integer> expectedHttpStatusCodes) {
-        int statusCode = context.response.code();
-        if (expectedHttpStatusCodes.size() > 0) {
+    protected void assertHttpResponseCodes(Call call, Response response, int... expectedHttpStatusCodes) {
+        int statusCode = response.code();
+        if (expectedHttpStatusCodes.length > 0) {
             for (int expected : expectedHttpStatusCodes) {
                 if (statusCode == expected) {
                     return;
                 }
             }
-            throw new LxdExceptionBuilder(context.call.request()).with(context.response).build();
+            throw new LxdExceptionBuilder(call.request()).with(response).build();
         }
     }
 
