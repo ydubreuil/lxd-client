@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+ENV["LC_ALL"] = "en_US.UTF-8"
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -47,8 +49,30 @@ Vagrant.configure("2") do |config|
   #   # Display the VirtualBox GUI when booting the machine
   #   vb.gui = true
   #
-  #   # Customize the amount of memory on the VM:
     vb.memory = "2048"
+    vb.cpus = 2
+
+    # Use COW to access the basebox disk => faster provisioning
+    vb.linked_clone = true
+
+    file_to_disk = File.realpath( "." ).to_s + "/zfs.vdi"
+
+    if File.exist?(file_to_disk)
+      # serial console is crazy slow...
+      # https://bugs.launchpad.net/cloud-images/+bug/1627844
+      # don't disable on first boot, as not having a serial console locks up systemd!
+      vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
+    end
+
+    unless File.exist?(file_to_disk)
+      vb.customize ['createhd', '--filename', file_to_disk, '--variant', 'Fixed', '--size', 10 * 1024]
+    end
+    vb.customize ['storageattach', :id,  '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+
+    vb.customize ['storagectl', :id, '--name', 'SCSI', '--hostiocache', 'on']
+    vb.customize ["modifyvm", :id, "--chipset", "ich9"]
+    vb.customize ["modifyvm", :id, "--audio", "none"]
+    vb.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
   end
   #
   # View the documentation for the provider you are using for more
@@ -61,10 +85,15 @@ Vagrant.configure("2") do |config|
   #   push.app = "YOUR_ATLAS_USERNAME/YOUR_APPLICATION_NAME"
   # end
 
+  config.vm.provision "file", source: "vagrant/lxd-bridge", destination: "/etc/default/lxd-bridge"
+
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
-   sudo lxd init --storage-backend=dir --auto || true
+   sudo sed -i 's| console=ttyS0||' /etc/default/grub && sudo update-grub
+   sudo apt update && sudo apt install -y zfsutils-linux
+   [ ! -d /lxdpool ] && sudo sudo zpool create -f lxdpool /dev/sdc
+   sudo lxd init --storage-backend=zfs --storage-pool=lxdpool --auto || true
   SHELL
 end
