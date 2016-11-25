@@ -243,7 +243,8 @@ public class RxLxdClient implements AutoCloseable {
     }
 
     protected <T> Maybe<T> parseSyncMaybe(RxOkHttpClientWrapper.TupleCallResponse cr, TypeReference<LxdResponse<T>> typeReference) {
-        return Maybe.just(parse(cr, typeReference, ResponseType.SYNC, 200, 404).getData());
+        LxdResponse<T> response = parse(cr, typeReference, ResponseType.SYNC, 200, 404);
+        return response != null ? Maybe.just(response.getData()) : Maybe.empty();
     }
 
     protected <T> Single<T> parseSyncSingle(RxOkHttpClientWrapper.TupleCallResponse rc, TypeReference<LxdResponse<T>> typeReference) {
