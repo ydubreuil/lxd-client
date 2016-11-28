@@ -1,5 +1,7 @@
 package com.cloudbees.lxd.client;
 
+import okhttp3.logging.HttpLoggingInterceptor;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,10 +10,9 @@ public class Config {
 
     private final String baseURL;
     private final String unixSocketPath;
-
     private final Map<String, String> remotesURL = new HashMap<>();
 
-    private boolean trustCerts;
+    private HttpLoggingInterceptor.Level logLevel = HttpLoggingInterceptor.Level.BODY;
 
     /** PEM encoded bytes of the client's certificate.
      * If {@link Config#baseURL} indicates a Unix socket, the certificate and key bytes will not be used. */
@@ -48,10 +49,6 @@ public class Config {
         return unixSocketPath != null;
     }
 
-    public boolean isTrustCerts() {
-        return trustCerts;
-    }
-
     public String getClientPEMCert() {
         return clientPEMCert;
     }
@@ -62,6 +59,10 @@ public class Config {
 
     public String getClientPEMKeyPassphrase() {
         return clientPEMKeyPassword;
+    }
+
+    public HttpLoggingInterceptor.Level getLogLevel() {
+        return logLevel;
     }
 
     public Map<String, String> getRemotesURL() {

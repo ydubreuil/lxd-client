@@ -10,7 +10,9 @@ import okio.Buffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.function.Function;
 
 /**
@@ -43,11 +45,10 @@ public class TestHelper implements AutoCloseable {
 
     public static class Builder {
         final MockWebServer server = new MockWebServer();
-        final Map<String, MockResponseBuilder> urlDispatchers = new HashMap<>();
+        final Map<String, Queue<MockResponseBuilder>> urlDispatchers = new HashMap<>();
 
         public Builder dispatchJsonString(String targetUrl, String body) {
-            return dispatchForUrl(targetUrl,
-                r ->  new MockResponse().setResponseCode(200).setBody(new Buffer().writeUtf8(body)).setHeader("Content-Type", "application/json; charset=utf-8"));
+            return dispatchForUrl(targetUrl, r ->  buildMockForJson(new Buffer().writeUtf8(body), 200));
         }
 
         public Builder dispatchJsonFile(String targetUrl, String classpathResourcePath) throws IOException {
@@ -55,12 +56,20 @@ public class TestHelper implements AutoCloseable {
         }
 
         public Builder dispatchJsonFile(String targetUrl, String classpathResourcePath, int responseCode) throws IOException {
-            return dispatchForUrl(targetUrl,
-                r ->  new MockResponse().setResponseCode(responseCode).setBody(fillBufferFromResource(classpathResourcePath)).setHeader("Content-Type", "application/json; charset=utf-8"));
+            return dispatchForUrl(targetUrl, r -> buildMockForJson(fillBufferFromResource(classpathResourcePath), responseCode));
+        }
+
+        public static MockResponse buildMockForJson(Buffer body, int responseCode) throws IOException {
+            return new MockResponse().setResponseCode(responseCode).setBody(body).setHeader("Content-Type", "application/json; charset=utf-8");
         }
 
         public Builder dispatchForUrl(String targetUrl, MockResponseBuilder builder) {
-            urlDispatchers.put(targetUrl, builder);
+            Queue<MockResponseBuilder> dispatchQueue = urlDispatchers.get(targetUrl);
+            if (dispatchQueue == null) {
+                dispatchQueue = new LinkedList<>();
+                urlDispatchers.put(targetUrl, dispatchQueue);
+            }
+            dispatchQueue.add(builder);
             return this;
         }
 
@@ -79,7 +88,7 @@ public class TestHelper implements AutoCloseable {
                     // we currently don't check if the HTTP method used in the good one...
                     if (urlDispatchers.containsKey(request.getPath())) {
                         try {
-                            return urlDispatchers.get(request.getPath()).apply(request);
+                            return urlDispatchers.get(request.getPath()).poll().apply(request);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

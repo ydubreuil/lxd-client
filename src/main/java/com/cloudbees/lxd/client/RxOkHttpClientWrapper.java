@@ -14,7 +14,11 @@ import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
+/**
+ * Make OkHttp client consumable using Rx
+ */
 public class RxOkHttpClientWrapper implements AutoCloseable {
 
     protected final OkHttpClient client;
@@ -149,4 +153,6 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             this.call = call;
         }
     }
+
+    private static final Logger logger = Logger.getLogger(RxOkHttpClientWrapper.class.getName());
 }

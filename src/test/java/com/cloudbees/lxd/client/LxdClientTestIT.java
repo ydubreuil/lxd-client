@@ -37,12 +37,10 @@ public class LxdClientTestIT {
 
         try {
             System.out.println("container.init");
-            Operation creation = container.init("ubuntu", "16.04", null, null, null, true).blockingGet();
-            assertEquals(Operation.Status.Success, creation.getStatusCode());
+            container.init("ubuntu", "16.04", null, null, null, true).blockingAwait();
 
             System.out.println("container.start");
-            Operation start = container.start(0, false, false).blockingGet();
-            assertEquals(Operation.Status.Success, start.getStatusCode());
+            container.start().blockingAwait();
 
             System.out.println("container.filePush");
             container.filePush("/home/ubuntu/.ssh/authorized_keys", 1000, 1000, "400", RequestBody.create(MediaType.parse("application/octet-stream"), "ssh-rsa this is a joke!"))
@@ -54,8 +52,7 @@ public class LxdClientTestIT {
             ).blockingSubscribe();
         } finally {
             System.out.println("container.stop");
-            Operation stop = container.stop(0, false, false).blockingGet();
-            assertEquals(Operation.Status.Success, stop.getStatusCode());
+            container.stop(0, false, false).blockingAwait();
 
             System.out.println("container.delete");
             container.delete().blockingAwait();

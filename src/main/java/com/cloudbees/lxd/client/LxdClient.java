@@ -16,10 +16,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.util.HashMap;
@@ -57,11 +57,17 @@ public class LxdClient implements AutoCloseable {
         rxClient.close();
     }
 
+    /**
+     * @return Server configuration and environment information
+     */
     public Single<ServerState> serverState() {
         return rxClient.get("1.0").build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<ServerState>>() {}));
     }
 
+    /**
+     * @return List of existing containers
+     */
     public Single<List<ContainerInfo>> containers() {
         return rxClient.get("1.0/containers" + RECURSION_SUFFIX).build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<ContainerInfo>>>() {}));
@@ -71,14 +77,26 @@ public class LxdClient implements AutoCloseable {
         return new Container(name);
     }
 
-    class Container {
+    public class Container {
         final String containerName;
 
+        /**
+         * Returns an API to interact with container containerName
+         * @param containerName the name of the container. Should be 64 chars max, ASCII, no slash, no colon and no comma
+         */
         Container(String containerName) {
             this.containerName = containerName;
         }
 
-        public Single<Operation> action(ContainerAction action, int timeout, boolean force, boolean stateful) {
+        /**
+         * Change the container state
+         * @param action State change action
+         * @param timeout A timeout after which the state change is considered as failed
+         * @param force Force the state change (currently only valid for stop and restart where it means killing the container)
+         * @param stateful Whether to store or restore runtime state before stopping or starting (only valid for stop and start, defaults to false)
+         * @return
+         */
+        public Completable action(ContainerAction action, int timeout, boolean force, boolean stateful) {
             Map<String, Object> body = new HashMap<>();
             body.put("action", action.getValue());
             body.put("timeout", timeout);
@@ -92,21 +110,19 @@ public class LxdClient implements AutoCloseable {
 
             return rxClient.put(format("1.0/containers/%s/state", containerName), json(body)).build()
                     .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                    .flatMap(o -> waitForCompletion(o));
+                .flatMapCompletable(o -> waitForCompletion(o));
         }
 
         public Completable delete() {
             return rxClient.delete(format("1.0/containers/%s", containerName)).build()
                 .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMap(o -> waitForCompletion(o))
-                .toCompletable();
+                .flatMapCompletable(o -> waitForCompletion(o));
         }
 
         public Completable deleteSnapshot(String snapshotName) {
             return rxClient.delete(format("1.0/containers/%s/snapshots/%s", containerName, snapshotName)).build()
                 .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMap(o -> waitForCompletion(o))
-                .toCompletable();
+                .flatMapCompletable(o -> waitForCompletion(o));
         }
 
         public Maybe<ContainerInfo> info() {
@@ -115,16 +131,16 @@ public class LxdClient implements AutoCloseable {
         }
 
         /**
-         * Initialize a container
+         * Create a new container
          * @param imgremote either null for the local LXD daemon or one of remote name defined in {@link Config#remotesURL}
          * @param image
          * @param profiles
-         * @param config
-         * @param devices
-         * @param ephem
+         * @param config Config override
+         * @param devices Optional list of devices the container should have
+         * @param ephem Whether to destroy the container on shutdown
          * @return
          */
-        public Single<Operation> init(String imgremote, String image, List<String> profiles, Map<String, String> config, List<Device> devices, boolean ephem) {
+        public Completable init(String imgremote, String image, List<String> profiles, Map<String, String> config, List<Device> devices, boolean ephem) {
 
             Map<String, String> source = new HashMap<>();
             source.put("type", "image");
@@ -134,7 +150,7 @@ public class LxdClient implements AutoCloseable {
                 // source.put("certificate", ); <= fetch the cert?
                 source.put("fingerprint", image);
             } else {
-                throw new NotImplementedException();
+                throw new IllegalArgumentException();
                 /*
                 ImageAliasesEntry alias = imageGetAlias(image);
                 String fingerprint = alias != null ? alias.getTarget() : image;
@@ -165,11 +181,18 @@ public class LxdClient implements AutoCloseable {
 
             return rxClient.post(format("1.0/containers", containerName), json(body)).build()
                 .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMap(o -> waitForCompletion(o));
+                .flatMapCompletable(o -> waitForCompletion(o));
         }
 
-        public Single<Operation> start(int timeout, boolean force, boolean stateful) {
-            return action(ContainerAction.Start, timeout, force, stateful);
+        /**
+         * Starts the container. Does nothing if the container is already started.
+         * Before issuing the start request, container state is checked and start request is issued only if
+         * state is Stopped
+         *
+         * @return
+         */
+        public Completable start() {
+            return action(ContainerAction.Start, 0, false, false);
         }
 
         public Maybe<ContainerState> state() {
@@ -177,7 +200,7 @@ public class LxdClient implements AutoCloseable {
                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ContainerState>>() {}));
         }
 
-        public Single<Operation> stop(int timeout, boolean force, boolean stateful) {
+        public Completable stop(int timeout, boolean force, boolean stateful) {
             return action(ContainerAction.Stop, timeout, force, stateful);
         }
 
@@ -209,7 +232,7 @@ public class LxdClient implements AutoCloseable {
         return new Image(imageFingerprint);
     }
 
-    class Image {
+    public class Image {
         final String imageFingerprint;
 
         Image(String imageFingerprint) {
@@ -220,6 +243,12 @@ public class LxdClient implements AutoCloseable {
             return rxClient.get(format("1.0/images/%s", imageFingerprint)).build()
                 .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ImageInfo>>(){}));
         }
+
+        public Completable delete() {
+            return rxClient.delete(format("1.0/images/%s", imageFingerprint)).build()
+                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMapCompletable(o -> waitForCompletion(o));
+        }
     }
 
     public Maybe<ImageAliasesEntry> alias(String aliasName) {
@@ -227,14 +256,24 @@ public class LxdClient implements AutoCloseable {
             .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ImageAliasesEntry>>(){}));
     }
 
-    /*
-        Warning!!!!
-        This blog post, https://www.stgraber.org/2016/04/18/lxd-api-direct-interaction/
-        says that "data about past operations disappears 5 seconds after they’re done."
-    */
-    public Single<Operation> waitForCompletion(LxdResponse<Operation> operationResponse) {
-        return rxClient.get(format("%s/wait?timeout=10", operationResponse.getOperationUrl())).build()
-            .flatMap(rp -> Single.just(rp.parseOperation(null, 200).getData()));
+    /**
+     * Polls LXD for operation completion
+     * @param operationResponse
+     * @return a stream of Operations
+     */
+    public Completable waitForCompletion(LxdResponse<Operation> operationResponse) {
+        /*
+           As explained in https://www.stgraber.org/2016/04/18/lxd-api-direct-interaction/
+          "data about past operations disappears 5 seconds after they’re done."
+
+          https://medium.com/@v.danylo/server-polling-and-retrying-failed-operations-with-retrofit-and-rxjava-8bcc7e641a5a#.9ji4311wi
+         */
+        return rxClient.get(format("%s/wait?timeout=5", operationResponse.getOperationUrl())).build()
+            .flatMapObservable(rp -> Observable.just(rp.parseOperation(ResponseType.SYNC, 200).getData()))
+            .repeat()
+            .takeUntil(operation -> operation.getStatusCode() != Operation.Status.Running)
+            .lastOrError()
+            .flatMapCompletable(operation -> operation.getStatusCode() == Operation.Status.Success ? Completable.complete() : Completable.error(new LxdClientException("Failed to complete")));
     }
 
     protected RequestBody json(Object resource) {

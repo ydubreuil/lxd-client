@@ -4,14 +4,24 @@ lxd-client is a Java REST API client for [LXD REST API](https://linuxcontainers.
 
 * OKHttp
 * Jackson
+* RxJava 2
 
-## Credits
+## Status
 
-I wouldn't have been able to write this client without borrowing ideas and code from https://github.com/fabric8io/docker-client
+The API is in early beta, so breakage will happen for time to time.
 
-Thanks to them!
+## Developing
 
-## Developing with Vagrant
+Client code is based on LXD documentation, see:
+
+* https://github.com/lxc/lxd/blob/master/doc/rest-api.md
+* https://www.stgraber.org/2016/04/18/lxd-api-direct-interaction/
+
+Starting to code with Rx can be difficult, so here is some good starting points:
+
+* https://yarikx.github.io/NotRxJava/
+
+### Vagrant box with LXD
 
 The root of this repos contains a Vagrantfile to start a VM with LXD. To launch it, you need Vagrant set up.
 
@@ -31,14 +41,14 @@ Keep command running to access the LXD control socket from your computer. If it 
 
     rm lxd.socket
 
-### Configuring LXD in the Vagrant box
+## Credits
 
-`lxcbr0` is not configured by default, so containers don't have network. To reconfigure the bridge and add some IPv4 or
-IPv6 subnet to it, you can run inside the Vagrant box:
+I wouldn't have been able to write this client without borrowing ideas and code from
 
-    sudo dpkg-reconfigure -p medium lxd
+* https://github.com/fabric8io/docker-client
+* https://github.com/shekhargulati/rx-docker-client
 
-More detailed configuration step in this blog post: [LXD 2.0: Installing and configuring LXD](https://www.stgraber.org/2016/03/15/lxd-2-0-installing-and-configuring-lxd-212/)
+Thanks to them!
 
 ## Debugging tips
 

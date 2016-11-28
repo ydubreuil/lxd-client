@@ -18,9 +18,9 @@ import java.io.IOException;
  * the REST API.
  */
 public class LxdResponseParser {
-    final Call call;
-    final Response response;
-    final ObjectMapper mapper;
+    protected final Call call;
+    protected final Response response;
+    protected final ObjectMapper mapper;
 
     public LxdResponseParser(ObjectMapper mapper, Call call, Response response) {
         this.mapper = mapper;

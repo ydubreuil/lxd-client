@@ -4,12 +4,14 @@ import com.cloudbees.lxd.client.api.ContainerInfo;
 import com.cloudbees.lxd.client.api.ImageInfo;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ServerState;
+import io.reactivex.Observable;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -52,15 +54,15 @@ public class LxdClientTest {
     public void containerStartTest() throws Exception {
         try (TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0/containers/it-957d09c12a9", "operations/start/container.json")
             .dispatchJsonFile("/1.0/containers/it-957d09c12a9/state", "operations/start/state.json", 202)
-            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait?timeout=10", "operations/start/operation.json")
+            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait?timeout=2", "operations/start/operation-in-progress.json")
+            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait?timeout=2", "operations/start/operation.json")
             .build();
              LxdClient client = new LxdClient(t.getConfig())
         ) {
             LxdClient.Container container = client.container("it-957d09c12a9");
             ContainerInfo containerInfo = container.info().blockingGet();
             assertEquals(Operation.Status.Stopped.getValue(), containerInfo.getStatusCode().intValue());
-            Operation start = container.start(0, false, false).blockingGet();
-            assertEquals(Operation.Status.Success, start.getStatusCode());
+            container.start().blockingAwait();
         }
     }
 
@@ -78,5 +80,13 @@ public class LxdClientTest {
             assertEquals("https://cloud-images.ubuntu.com/releases", first.getUpdateSource().getServer());
             assertEquals("ubuntu", first.getAliases().get(0).getName());
         }
+    }
+
+    @Test
+    public void rxTest() {
+        AtomicInteger c = new AtomicInteger();
+        Observable.just(5,3)
+            .repeatWhen(o -> o.takeWhile(v -> c.getAndIncrement() == 0))
+            .subscribe(System.out::println, Throwable::printStackTrace, () -> System.out.println("Done"));
     }
 }
