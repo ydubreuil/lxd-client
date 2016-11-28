@@ -14,13 +14,13 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-public class RxLxdClientTest {
+public class LxdClientTest {
 
     @Test
     public void serverStateTest() throws Exception {
         try (
             TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0", "serverState-trusted.json").build();
-            RxLxdClient client = new RxLxdClient(t.getConfig())
+            LxdClient client = new LxdClient(t.getConfig())
         ) {
             ServerState serverState = client.serverState().blockingGet();
 
@@ -37,7 +37,7 @@ public class RxLxdClientTest {
     public void serverStateFailingTest() throws Exception {
         try (
             TestHelper t = new TestHelper.Builder().dispatchForUrl("/1.0", r -> new MockResponse().setResponseCode(404)).build();
-            RxLxdClient client = new RxLxdClient(t.getConfig())
+            LxdClient client = new LxdClient(t.getConfig())
         ) {
             try {
                 client.serverState().blockingGet();
@@ -52,11 +52,11 @@ public class RxLxdClientTest {
     public void containerStartTest() throws Exception {
         try (TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0/containers/it-957d09c12a9", "operations/start/container.json")
             .dispatchJsonFile("/1.0/containers/it-957d09c12a9/state", "operations/start/state.json", 202)
-            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait", "operations/start/operation.json")
+            .dispatchJsonFile("/1.0/operations/f96471ce-5689-433b-b382-cd1f5fbc669c/wait?timeout=10", "operations/start/operation.json")
             .build();
-             RxLxdClient client = new RxLxdClient(t.getConfig())
+             LxdClient client = new LxdClient(t.getConfig())
         ) {
-            RxLxdClient.Container container = client.container("it-957d09c12a9");
+            LxdClient.Container container = client.container("it-957d09c12a9");
             ContainerInfo containerInfo = container.info().blockingGet();
             assertEquals(Operation.Status.Stopped.getValue(), containerInfo.getStatusCode().intValue());
             Operation start = container.start(0, false, false).blockingGet();
@@ -68,7 +68,7 @@ public class RxLxdClientTest {
     public void imagesListTest() throws Exception {
         try (
             TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0/images?recursion=1", "listImages.json").build();
-            RxLxdClient client = new RxLxdClient(t.getConfig())
+            LxdClient client = new LxdClient(t.getConfig())
         ) {
             List<ImageInfo> imageInfoList = client.images().blockingGet();
 

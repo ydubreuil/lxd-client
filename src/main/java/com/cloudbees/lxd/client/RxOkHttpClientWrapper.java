@@ -2,42 +2,29 @@ package com.cloudbees.lxd.client;
 
 import com.cloudbees.lxd.client.utils.HttpUtils;
 import com.cloudbees.lxd.client.utils.URLUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class RxOkHttpClientWrapper implements AutoCloseable {
 
-    protected static final ObjectMapper JSON_MAPPER = new ObjectMapper()
-        .enable(DeserializationFeature.UNWRAP_SINGLE_VALUE_ARRAYS)
-        .disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
-
-    public static final MediaType MEDIA_TYPE_JSON = MediaType.parse("application/json; charset=utf-8");
-    public static final MediaType MEDIA_TYPE_OCTET = MediaType.parse("application/octet-stream; charset=utf-8");
-    public static final MediaType MEDIA_TYPE_TAR = MediaType.parse("application/tar; charset=utf-8");
-
     protected final OkHttpClient client;
     protected final Config config;
     protected final String rootApiUrl;
+    protected final LxdResponseParser.Factory responseParserFactory;
 
-    public RxOkHttpClientWrapper(Config config) {
+    public RxOkHttpClientWrapper(Config config, LxdResponseParser.Factory responseParserFactory) {
         this.config = config;
+        this.responseParserFactory = responseParserFactory;
         this.client = HttpUtils.createHttpClient(config);
         this.rootApiUrl = URLUtils.join(config.useUnixTransport() ? "http://localhost:80" : config.getBaseURL());
     }
@@ -107,13 +94,13 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             this.body = body;
         }
 
-        public Single<TupleCallResponse> build(Function<Request.Builder, Request.Builder> f) {
+        public Single<LxdResponseParser> build(Function<Request.Builder, Request.Builder> f) {
             return call(f.apply(new Request.Builder().method(method, body))
                 .addHeader("User-Agent", "LXD-Java-Client")
                 .url(resourceUrl));
         }
 
-        public Single<TupleCallResponse> build() {
+        public Single<LxdResponseParser> build() {
             return build(Function.identity());
         }
 
@@ -122,7 +109,7 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             return this;
         }
 
-        protected Single<TupleCallResponse> call(Request.Builder requestBuilder) {
+        protected Single<LxdResponseParser> call(Request.Builder requestBuilder) {
             Request request = requestBuilder.build();
 
             return Single.create(s -> {
@@ -135,7 +122,7 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
 
                     @Override
                     public void onResponse(Call call1, Response response) throws IOException {
-                        s.onSuccess(new TupleCallResponse(call1, response));
+                        s.onSuccess(responseParserFactory.build(call1, response));
                     }
                 });
 
@@ -151,16 +138,6 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
                     }
                 });
             });
-        }
-    }
-
-    public static class TupleCallResponse {
-        public final Call call;
-        public final Response response;
-
-        private TupleCallResponse(Call call, Response response) {
-            this.call = call;
-            this.response = response;
         }
     }
 

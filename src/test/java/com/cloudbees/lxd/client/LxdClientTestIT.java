@@ -15,13 +15,13 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
-public class RxLxdClientTestIT {
+public class LxdClientTestIT {
 
-    RxLxdClient client;
+    LxdClient client;
 
     @Before
     public void setUp() {
-        client = new RxLxdClient(Config.localAccessConfig(Paths.get("lxd.socket").toAbsolutePath().toString()));
+        client = new LxdClient(Config.localAccessConfig(Paths.get("lxd.socket").toAbsolutePath().toString()));
     }
 
     @Test
@@ -33,7 +33,7 @@ public class RxLxdClientTestIT {
 
     @Test
     public void containerSimpleLifecycle() throws InterruptedException {
-        RxLxdClient.Container container = client.container("it-" + Long.toHexString(System.nanoTime()));
+        LxdClient.Container container = client.container("it-" + Long.toHexString(System.nanoTime()));
 
         try {
             System.out.println("container.init");
