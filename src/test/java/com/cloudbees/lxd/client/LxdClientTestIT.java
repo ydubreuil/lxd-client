@@ -3,7 +3,9 @@ package com.cloudbees.lxd.client;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.ImageInfo;
 import com.cloudbees.lxd.client.api.Operation;
+import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.junit.Before;
@@ -36,20 +38,12 @@ public class LxdClientTestIT {
         LxdClient.Container container = client.container("it-" + Long.toHexString(System.nanoTime()));
 
         try {
-            System.out.println("container.init");
-            container.init("ubuntu", "16.04", null, null, null, true).blockingAwait();
-
-            System.out.println("container.start");
-            container.start().blockingAwait();
-
-            System.out.println("container.filePush");
-            container.filePush("/home/ubuntu/.ssh/authorized_keys", 1000, 1000, "400", RequestBody.create(MediaType.parse("application/octet-stream"), "ssh-rsa this is a joke!"))
-                .toObservable()
-                .retryWhen(errors ->
-                    errors
-                    .zipWith(Observable.range(1, 10), (n, i) -> i)
-                    .flatMap(retryCount -> Observable.timer((long) retryCount, TimeUnit.SECONDS))
-            ).blockingSubscribe();
+            container.init("ubuntu", "16.04", null, null, null, true).doOnComplete(() -> System.out.println("Container created"))
+                .andThen(container.start().doOnComplete(() -> System.out.println("Container started")))
+                .andThen(container.filePush("/home/ubuntu/.ssh/authorized_keys", 1000, 1000, "400", RequestBody.create(MediaType.parse("application/octet-stream"), "ssh-rsa this is a joke!"))
+                    .compose(t -> LxdClientHelpers.retryOnFailure(t, 10))
+                    .doOnComplete(() -> System.out.println("SSH key pushed")))
+                .blockingAwait();
         } finally {
             System.out.println("container.stop");
             container.stop(0, false, false).blockingAwait();

@@ -215,7 +215,8 @@ public class LxdClient implements AutoCloseable {
                     .addHeader("X-LXD-mode", mode)
                     .addHeader("X-LXD-uid", String.valueOf(uid))
                     .addHeader("X-LXD-gid", String.valueOf(gid)))
-                .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<Void>>() {})).toCompletable();
+                .flatMapCompletable(rp -> rp.parse(new TypeReference<LxdResponse<Void>>() {}, ResponseType.SYNC, 200) != null ?
+                    Completable.complete() : Completable.error(new LxdClientException("")));
         }
 
         public Completable filePush(String targetPath, int gid, int uid, String mode, File file) {
