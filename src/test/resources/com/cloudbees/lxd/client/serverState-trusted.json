@@ -1,0 +1,31 @@
+{
+    "type": "sync",
+    "status": "Success",
+    "status_code": 200,
+    "metadata": {
+        "api_extensions": [],
+        "api_status": "stable",
+        "api_version": "1.0",
+        "auth": "trusted",
+        "config": {},
+        "environment": {
+            "addresses": [],
+            "architectures": [
+                "x86_64",
+                "i686"
+            ],
+            "certificate": "-----BEGIN CERTIFICATE-----\nMIIFpjCCA46gAwIBAgIRAIoXOr7kkyOpc2eOJkMOPZowDQYJKoZIhvcNAQELBQAw\nOzEcMBoGA1UEChMTbGludXhjb250YWluZXJzLm9yZzEbMBkGA1UEAwwScm9vdEB1\nYnVudHUteGVuaWFsMB4XDTE2MTAyMDExNTQzOFoXDTI2MTAxODExNTQzOFowOzEc\nMBoGA1UEChMTbGludXhjb250YWluZXJzLm9yZzEbMBkGA1UEAwwScm9vdEB1YnVu\ndHUteGVuaWFsMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAzxkgsNXk\n7eG/aN+TPcOuxl0y/5whLZPbbn4m+Js5JtecLIa7YBcZOlGwTSrHFizOVX8wFkjg\nzUdqKMe5Mfp7zbAbCERvnJR7ef8NPu+q88r1qRimVcr2FTvCr/8wjilQz/EsQyIt\nHYIzdsJXLlbHrIHOHrCiWra41HGBaY6+qtBUgNH0w0UBmzjLhztrNSO3KdxF8z1m\nd+NNzKg79pMkPHltkIiMd7oyXRE3vqwiBvxWbvcBuw3A229aU5f/Iyw3YK50O/uL\n17sw6n5Gh83dwU7OCONAAsvHArrbSiJUl/uIIZ5OjvP9GAiGvNIQDeAQRr9t7hr2\n/WcIHKKGADW4SuPpT2MAthN8YBj/stf7/kDh+B9qgNo00Gle3Z2tHDDo2ajfJ6wj\npcS/GMy23gDX/qSqDbwKFtPsQH68VMcndpToJJBpi/Qgq53F2QHrRPncc6DAjZeQ\ngE7AUg/rrkazQgcBDks5kXrCXpZZ9HqnDJfloRrE8eFy5mSC1ssJ4BaZpKAieY7J\ncXlXl/BkYB4I8zY/Frk9CcweIXwWPN/VUgLqOedz7BPMG3DLCysSUflNoBfXZUiO\n3bS0590uJfixnatk3XrpD5/wwPaIJtJUus+bbKh1wx/kEO7SCVZ0LhYXkADx2vJD\nxIpVllSxFLjPKk4hY7N1tRKXGNgBEJTkzn8CAwEAAaOBpDCBoTAOBgNVHQ8BAf8E\nBAMCBaAwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADBsBgNVHREE\nZTBjgg11YnVudHUteGVuaWFsggwxMC4wLjIuMTUvMjSCGmZlODA6OjNiOjEwZmY6\nZmVmZTo4MjhkLzY0ghxmZTgwOjplYzA0OjEyZmY6ZmVkMzo4ZTk1LzY0ggpmZTgw\nOjoxLzY0MA0GCSqGSIb3DQEBCwUAA4ICAQA/0qCAg7wiqDYouZzDy5PHfnTP5zzI\namRck1XRPYXKhJkpprpCptHiE4MRdFeid41zty70H9PIKQWyshys1OcSmoEBoq/1\nLqpHvX8Bczye/nYihNUoPayzGZt4NXW3pUpgKjiDWfJiqJhg4vD110vuE9ivL2xE\nkTgkoO9NNcjrSFEyKCFmLW/Rt+KwIWvxN9SzvET/+sRb8+w6j2OQOWwoqhc9fS9L\n+BqRZ7g2ittHajkkWW/E1kuN+iIPbVa2Au9P5mXL4qA6RFMPjThgONQNeXkn0Kfg\nYAESY++2tVOxvyPeHQ/4/a5jyVDJvCw2wBz1HPKgFa5nnEy4ee5XHi4I2cCtDZ9W\nbZGbOVfPSpZJGibN0DanLKmec7VLUDWgvgqfHDYXcA3c70QnPoQanrrOovedco7U\n4Zj+yNUGbrWV5FwmJbLL4I71sZkFL5eSPR0cwZQtlisua1m0aWloCX3bLDHD6Rrr\nG6g3hwJfRhHUEng2TgmGI9s504jA0dotjXDzjFl2uX3sYdASu49I6KyKCQlYMKzd\nLkZY3zFIxYoG8gEIIbAnEzTLReV5I7+87qD9qRFgz1OnURgPOhUxwbZqjeNzoYc6\nPPIv3321lG1pgWSX3zxo8Ns5K1Rn1fM6bA5a0JmiEtEwzR+o7teGa24GXcFzYdba\ndEQPQ9IKqLrRqg==\n-----END CERTIFICATE-----\n",
+            "driver": "lxc",
+            "driver_version": "2.0.4",
+            "kernel": "Linux",
+            "kernel_architecture": "x86_64",
+            "kernel_version": "4.4.0-43-generic",
+            "server": "lxd",
+            "server_pid": 6114,
+            "server_version": "2.0.4",
+            "storage": "dir",
+            "storage_version": ""
+        },
+        "public": false
+    }
+}

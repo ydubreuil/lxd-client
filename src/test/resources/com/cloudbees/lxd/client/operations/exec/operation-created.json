@@ -1,0 +1,29 @@
+{
+    "type": "async",
+    "status": "Operation created",
+    "status_code": 100,
+    "metadata": {
+        "id": "bafce5c9-837f-422e-bb95-28a241b53add",
+        "class": "websocket",
+        "created_at": "2016-11-29T11:01:20.095978135Z",
+        "updated_at": "2016-11-29T11:01:20.095978135Z",
+        "status": "Running",
+        "status_code": 103,
+        "resources": {
+            "containers": [
+                "/1.0/containers/it-exec"
+            ]
+        },
+        "metadata": {
+            "fds": {
+                "0": "7d43af3717e61c515390ed893455914a781c61784c1785e92e916fdb1818c037",
+                "1": "bdbbd60afce9134eea7d383ff66533b6777773d90f90f5d1895331abc1920d5a",
+                "2": "38f5331b65df185542f7bde7f9ad78f2dca3edd1c76ff1ae863585afda34209e",
+                "control": "7296620fe62f427eb39357832ed10391d9f1be0e4cf5707ad8d02da1b667e6e5"
+            }
+        },
+        "may_cancel": false,
+        "err": ""
+    },
+    "operation": "/1.0/operations/bafce5c9-837f-422e-bb95-28a241b53add"
+}
