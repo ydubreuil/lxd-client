@@ -94,11 +94,12 @@ Vagrant.configure("2") do |config|
    apt-get purge -y lxd
    rm -rf /var/lib/lxd
 
+   cp /vagrant/vagrant/lxd-bridge /etc/default/lxd-bridge
+
    mkfs.btrfs -L lxdroot /dev/sdc && echo "LABEL=lxdroot  /var/lib/lxd  btrfs  defaults,user_subvol_rm_allowed,compress=lzo,noatime,nobarrier,nodatasum 0 0" >> /etc/fstab
    mount -a
 
    apt-get update && apt-get install -y lxd
-   cp /vagrant/vagrant/lxd-bridge /etc/default/lxd-bridge
    lxd init --auto || true
 
    su ubuntu -c "lxc list"
