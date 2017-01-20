@@ -33,6 +33,26 @@ to build, with the current directory volume-mounted into place.
 Run `make clean` to clean up.
 
 
-## Updating
+## Shell configuration
 
-LXD sources are vendored, meaning that updating the schema requires running `go vendor fetch` again.
+In order to use standard Go tooling from the command line, you need to create a GOPATH with
+
+    make gopath
+
+and then set `GOPATH` variable with
+
+    export GOPATH="$(pwd)/gopath"
+    export PATH="$PATH:$(pwd)/gopath/bin"
+
+You can then go inside the `GOPATH` to work with the sources.
+
+### Updating the LXD shared sources
+
+govendor tool is used to manage vendored dependencies. It is not available by default in the Go toolbox. To install it, run:
+
+    go get -u github.com/kardianos/govendor
+
+Then, to update the LXD dependencies, under `gopath/src/github.com/cloudbees/lxd-client/generator`, run
+
+    govendor fetch github.com/lxc/lxd/shared
+    govendor fetch github.com/lxc/lxd/shared/api

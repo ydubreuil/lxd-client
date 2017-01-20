@@ -1,24 +1,17 @@
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.ContainerInfo;
-import com.cloudbees.lxd.client.api.ContainerState;
-import com.cloudbees.lxd.client.api.ImageAliasesEntry;
-import com.cloudbees.lxd.client.api.ImageInfo;
-import com.cloudbees.lxd.client.api.ServerState;
+import com.cloudbees.lxd.client.api.Server;
 import com.cloudbees.lxd.client.api.StatusCode;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Tests using the vagrant box
@@ -42,14 +35,14 @@ public class LxdClientTestIT {
      */
     @Test
     public void connectionTrusted() throws Exception {
-        ServerState serverState = client.serverState().blockingGet();
-        Assert.assertEquals("trusted", serverState.getAuth());
+        Server server = client.server().blockingGet();
+        Assert.assertEquals("trusted", server.getAuth());
     }
 
     @Test
     public void containerSimpleLifecycle() throws InterruptedException {
-        Assert.assertEquals("trusted", client.serverState().blockingGet().getAuth());
-        LxdClient.Container container = client.container("it-" + Long.toHexString(System.nanoTime()));
+        Assert.assertEquals("trusted", client.server().blockingGet().getAuth());
+        LxdClient.ContainerClient container = client.container("it-" + Long.toHexString(System.nanoTime()));
 
         try {
             container.init("ubuntu", "16.04", null, null, null, true).doOnComplete(() -> System.out.println("Container created"))

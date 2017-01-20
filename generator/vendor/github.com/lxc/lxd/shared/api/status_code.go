@@ -1,7 +1,9 @@
-package shared
+package api
 
+// StatusCode represents a valid LXD operation and container status
 type StatusCode int
 
+// LXD status codes
 const (
 	OperationCreated StatusCode = 100
 	Started          StatusCode = 101
@@ -23,6 +25,7 @@ const (
 	Cancelled StatusCode = 401
 )
 
+// String returns a suitable string representation for the status code
 func (o StatusCode) String() string {
 	return map[StatusCode]string{
 		OperationCreated: "Operation created",
@@ -44,25 +47,7 @@ func (o StatusCode) String() string {
 	}[o]
 }
 
+// IsFinal will return true if the status code indicates an end state
 func (o StatusCode) IsFinal() bool {
 	return int(o) >= 200
-}
-
-/*
- * Create a StatusCode from an lxc.State code. N.B.: we accept an int instead
- * of a lxc.State so that the shared code doesn't depend on lxc, which depends
- * on liblxc, etc.
- */
-func FromLXCState(state int) StatusCode {
-	return map[int]StatusCode{
-		1: Stopped,
-		2: Starting,
-		3: Running,
-		4: Stopping,
-		5: Aborting,
-		6: Freezing,
-		7: Frozen,
-		8: Thawed,
-		9: Error,
-	}[state]
 }

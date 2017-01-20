@@ -9,11 +9,17 @@
 			"revisionTime": "2016-09-12T15:30:41Z"
 		},
 		{
-			"checksumSHA1": "qRGdHxDY9WgXKv8E9t9PgSQcw6U=",
+			"checksumSHA1": "lymxZVCUdDXkpfAS2sZZCXZ8uY4=",
 			"path": "github.com/lxc/lxd/shared",
-			"revision": "375d0e06cb15da0b32df2420bbffff32ce592e37",
-			"revisionTime": "2016-10-14T22:39:13Z"
+			"revision": "070a68a342601b6179c3f972d38f5459f050e7c8",
+			"revisionTime": "2017-01-20T02:27:57Z"
+		},
+		{
+			"checksumSHA1": "H9kL2dFnl9O4InCIwbmq2PDo/rI=",
+			"path": "github.com/lxc/lxd/shared/api",
+			"revision": "070a68a342601b6179c3f972d38f5459f050e7c8",
+			"revisionTime": "2017-01-20T02:27:57Z"
 		}
 	],
-	"rootPath": "github.com/cloudbees/lxd-client"
+	"rootPath": "github.com/cloudbees/lxd-client/generator"
 }

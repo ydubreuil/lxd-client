@@ -24,9 +24,9 @@
 
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.ContainerInfo;
-import com.cloudbees.lxd.client.api.ImageInfo;
-import com.cloudbees.lxd.client.api.ServerState;
+import com.cloudbees.lxd.client.api.Container;
+import com.cloudbees.lxd.client.api.Image;
+import com.cloudbees.lxd.client.api.Server;
 import com.cloudbees.lxd.client.api.StatusCode;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -43,17 +43,17 @@ public class LxdClientTest {
     @Test
     public void serverStateTest() throws Exception {
         try (
-            TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0", "serverState-trusted.json").build();
+            TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0", "server-trusted.json").build();
             LxdClient client = new LxdClient(t.getConfig())
         ) {
-            ServerState serverState = client.serverState().blockingGet();
+            Server server = client.server().blockingGet();
 
             RecordedRequest rr = t.server.takeRequest();
             assertEquals("/1.0", rr.getPath());
 
-            assertEquals("1.0", serverState.getApiVersion());
-            assertEquals("trusted", serverState.getAuth());
-            assertEquals("lxc", serverState.getEnvironment().getDriver());
+            assertEquals("1.0", server.getApiVersion());
+            assertEquals("trusted", server.getAuth());
+            assertEquals("lxc", server.getEnvironment().getDriver());
         }
     }
 
@@ -64,7 +64,7 @@ public class LxdClientTest {
             LxdClient client = new LxdClient(t.getConfig())
         ) {
             try {
-                client.serverState().blockingGet();
+                client.server().blockingGet();
                 fail();
             } catch (Exception e) {
                 Assert.assertTrue(e instanceof LxdClientException);
@@ -81,10 +81,10 @@ public class LxdClientTest {
             .build();
              LxdClient client = new LxdClient(t.getConfig())
         ) {
-            LxdClient.Container container = client.container("it-957d09c12a9");
-            ContainerInfo containerInfo = container.info().blockingGet();
-            assertEquals(StatusCode.Stopped, containerInfo.getStatusCode());
-            container.start().blockingAwait();
+            LxdClient.ContainerClient containerClient = client.container("it-957d09c12a9");
+            Container container = containerClient.info().blockingGet();
+            assertEquals(StatusCode.Stopped, container.getStatusCode());
+            containerClient.start().blockingAwait();
         }
     }
 
@@ -94,10 +94,10 @@ public class LxdClientTest {
             TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0/images?recursion=1", "listImages.json").build();
             LxdClient client = new LxdClient(t.getConfig())
         ) {
-            List<ImageInfo> imageInfoList = client.images().blockingGet();
+            List<Image> images = client.images().blockingGet();
 
-            assertEquals(1, imageInfoList.size());
-            ImageInfo first = imageInfoList.get(0);
+            assertEquals(1, images.size());
+            Image first = images.get(0);
             assertEquals("6f25adef061c3f2186c6910bff8cacd0c63e1493e3f8b616e52eb84076890bd1", first.getFingerprint());
             assertEquals("https://cloud-images.ubuntu.com/releases", first.getUpdateSource().getServer());
             assertEquals("ubuntu", first.getAliases().get(0).getName());

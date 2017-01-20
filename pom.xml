@@ -6,7 +6,7 @@
   <groupId>com.cloudbees.lxd</groupId>
   <artifactId>lxd-client</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
 
   <name>LXD client for Java 8</name>
   <inceptionYear>2016</inceptionYear>

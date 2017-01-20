@@ -24,16 +24,16 @@
 
 package com.cloudbees.lxd.client;
 
+import com.cloudbees.lxd.client.api.Container;
 import com.cloudbees.lxd.client.api.ContainerAction;
-import com.cloudbees.lxd.client.api.ContainerInfo;
 import com.cloudbees.lxd.client.api.ContainerState;
 import com.cloudbees.lxd.client.api.Device;
+import com.cloudbees.lxd.client.api.Image;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
-import com.cloudbees.lxd.client.api.ImageInfo;
 import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ResponseType;
-import com.cloudbees.lxd.client.api.ServerState;
+import com.cloudbees.lxd.client.api.Server;
 import com.cloudbees.lxd.client.api.StatusCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -92,31 +92,31 @@ public class LxdClient implements AutoCloseable {
     /**
      * @return Server configuration and environment information
      */
-    public Single<ServerState> serverState() {
+    public Single<Server> server() {
         return rxClient.get("1.0").build()
-            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<ServerState>>() {}));
+            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<Server>>() {}));
     }
 
     /**
      * @return List of existing containers
      */
-    public Single<List<ContainerInfo>> containers() {
+    public Single<List<ContainerClient>> containers() {
         return rxClient.get("1.0/containers" + RECURSION_SUFFIX).build()
-            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<ContainerInfo>>>() {}));
+            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<ContainerClient>>>() {}));
     }
 
-    public Container container(String name) {
-        return new Container(name);
+    public ContainerClient container(String name) {
+        return new ContainerClient(name);
     }
 
-    public class Container {
+    public class ContainerClient {
         final String containerName;
 
         /**
          * Returns an API to interact with container containerName
          * @param containerName the name of the container. Should be 64 chars max, ASCII, no slash, no colon and no comma
          */
-        Container(String containerName) {
+        ContainerClient(String containerName) {
             this.containerName = containerName;
         }
 
@@ -197,9 +197,9 @@ public class LxdClient implements AutoCloseable {
                 });
         }
 
-        public Maybe<ContainerInfo> info() {
+        public Maybe<Container> info() {
             return rxClient.get(format("1.0/containers/%s", containerName)).build()
-                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ContainerInfo>>() {}));
+                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Container>>() {}));
         }
 
         /**
@@ -316,25 +316,25 @@ public class LxdClient implements AutoCloseable {
         }
     }
 
-    public Single<List<ImageInfo>> images() {
+    public Single<List<Image>> images() {
         return rxClient.get("1.0/images" + RECURSION_SUFFIX).build()
-            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<ImageInfo>>>(){}));
+            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Image>>>(){}));
     }
 
-    public Image image(String imageFingerprint) {
-        return new Image(imageFingerprint);
+    public ImageClient image(String imageFingerprint) {
+        return new ImageClient(imageFingerprint);
     }
 
-    public class Image {
+    public class ImageClient {
         final String imageFingerprint;
 
-        Image(String imageFingerprint) {
+        ImageClient(String imageFingerprint) {
             this.imageFingerprint = imageFingerprint;
         }
 
-        public Maybe<ImageInfo> info() {
+        public Maybe<Image> info() {
             return rxClient.get(format("1.0/images/%s", imageFingerprint)).build()
-                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ImageInfo>>(){}));
+                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Image>>(){}));
         }
 
         public Completable delete() {

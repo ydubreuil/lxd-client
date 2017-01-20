@@ -25,14 +25,11 @@ import (
 	"strings"
 
 	"github.com/cloudbees/lxd-client/generator/pkg/schemagen"
-	api "github.com/lxc/lxd/shared"
+    "github.com/lxc/lxd/shared/api"
 )
 
 type Schema struct {
-    CertInfo                      api.CertInfo
-	IdmapEntry                    api.IdmapEntry
-    Device                        api.Device
-    Devices                       api.Devices
+    Certificate                   api.Certificate
 	ContainerState                api.ContainerState
 	ContainerStateDisk            api.ContainerStateDisk
 	ContainerStateCPU             api.ContainerStateCPU
@@ -41,29 +38,20 @@ type Schema struct {
 	ContainerStateNetworkAddress  api.ContainerStateNetworkAddress
 	ContainerStateNetworkCounters api.ContainerStateNetworkCounters
 	ContainerExecControl          api.ContainerExecControl
-	SnapshotInfo                  api.SnapshotInfo
-	ContainerInfo                 api.ContainerInfo
-    BriefContainerInfo            api.BriefContainerInfo
-    ProfileConfig                 api.ProfileConfig
-    NetworkConfig                 api.NetworkConfig
+	SnapshotInfo                  api.ContainerSnapshot
+	Container                     api.Container
+    Profile                       api.Profile
+    Network                       api.Network
+    NetworksPost                  api.NetworksPost
     ImageAliasesEntry             api.ImageAliasesEntry
     ImageSource                   api.ImageSource
-    ImageInfo                     api.ImageInfo
-	BriefImageInfo                api.BriefImageInfo
-	ServerStateEnvironment        api.ServerStateEnvironment
-	ServerState                   api.ServerState
-	BriefServerState              api.BriefServerState
-    SimpleStreamsManifest         api.SimpleStreamsManifest
-    SimpleStreamsManifestProduct  api.SimpleStreamsManifestProduct
-    SimpleStreamsManifestProductVersion api.SimpleStreamsManifestProductVersion
-    SimpleStreamsManifestProductVersionItem api.SimpleStreamsManifestProductVersionItem
-    SimpleStreamsIndex            api.SimpleStreamsIndex
-    SimpleStreamsIndexStream      api.SimpleStreamsIndexStream
+    Image                         api.Image
+	ServerEnvironment             api.ServerEnvironment
 }
 
 func main() {
 	packages := []schemagen.PackageDescriptor{
-		{"github.com/cloudbees/lxd-client/generator/vendor/github.com/lxc/lxd/shared", "com.cloudbees.lxd.client.api", "lxd_"},
+		{"github.com/cloudbees/lxd-client/generator/vendor/github.com/lxc/lxd/shared/api", "com.cloudbees.lxd.client.api", "lxd_"},
 	}
 
 	typeMap := map[reflect.Type]reflect.Type{

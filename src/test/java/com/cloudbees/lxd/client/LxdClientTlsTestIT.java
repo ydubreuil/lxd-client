@@ -13,7 +13,7 @@ public class LxdClientTlsTestIT {
     public void connectWithTLS() throws Exception {
         Config clientConfig = buildTlsConfig();
         try (LxdClient tlsClient = new LxdClient(clientConfig)) {
-            Assert.assertEquals("trusted", tlsClient.serverState().blockingGet().getAuth());
+            Assert.assertEquals("trusted", tlsClient.server().blockingGet().getAuth());
         }
     }
 
