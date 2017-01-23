@@ -1,19 +1,18 @@
 
 package com.cloudbees.lxd.client.api;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
-import javax.annotation.Generated;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -23,32 +22,18 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "managed",
     "name",
-    "type",
     "used_by"
 })
-public class Network extends NetworkPut
+public class Profile extends ProfilePut
 {
 
     /**
      *
      *
      */
-    @JsonProperty("managed")
-    private Boolean managed;
-    /**
-     *
-     *
-     */
     @JsonProperty("name")
     private String name;
-    /**
-     *
-     *
-     */
-    @JsonProperty("type")
-    private String type;
     /**
      *
      *
@@ -60,29 +45,7 @@ public class Network extends NetworkPut
      * No args constructor for use in serialization
      *
      */
-    public Network() {
-    }
-
-    /**
-     *
-     *
-     * @return
-     *     The managed
-     */
-    @JsonProperty("managed")
-    public Boolean getManaged() {
-        return managed;
-    }
-
-    /**
-     *
-     *
-     * @param managed
-     *     The managed
-     */
-    @JsonProperty("managed")
-    public void setManaged(Boolean managed) {
-        this.managed = managed;
+    public Profile() {
     }
 
     /**
@@ -111,28 +74,6 @@ public class Network extends NetworkPut
      *
      *
      * @return
-     *     The type
-     */
-    @JsonProperty("type")
-    public String getType() {
-        return type;
-    }
-
-    /**
-     *
-     *
-     * @param type
-     *     The type
-     */
-    @JsonProperty("type")
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    /**
-     *
-     *
-     * @return
      *     The usedBy
      */
     @JsonProperty("used_by")
@@ -150,4 +91,5 @@ public class Network extends NetworkPut
     public void setUsedBy(List<String> usedBy) {
         this.usedBy = usedBy;
     }
+
 }

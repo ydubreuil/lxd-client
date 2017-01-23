@@ -1,4 +1,4 @@
-package com.cloudbees.lxd.client.api;
+package com.cloudbees.lxd.client.api.builder;
 
 import java.util.HashMap;
 

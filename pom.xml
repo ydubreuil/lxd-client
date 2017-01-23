@@ -108,6 +108,32 @@
     </dependency>
   </dependencies>
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.jsonschema2pojo</groupId>
+          <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+          <version>${jsonschema2pojo.version}</version>
+          <configuration>
+            <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+            <targetPackage>com.cloudbees.lxd.client.api</targetPackage>
+            <includeConstructors>true</includeConstructors>
+            <includeToString>false</includeToString>
+            <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
+            <outputDirectory>${basedir}/target/generated-sources</outputDirectory>
+          </configuration>
+          <executions>
+            <execution>
+              <id>generate</id>
+              <phase>generate-sources</phase>
+              <goals>
+                <goal>generate</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -119,32 +145,35 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.jsonschema2pojo</groupId>
-        <artifactId>jsonschema2pojo-maven-plugin</artifactId>
-        <version>${jsonschema2pojo.version}</version>
-        <configuration>
-          <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
-          <targetPackage>com.cloudbees.lxd.client.api</targetPackage>
-          <includeConstructors>true</includeConstructors>
-          <includeToString>false</includeToString>
-          <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
-          <outputDirectory>${basedir}/target/generated-sources</outputDirectory>
-        </configuration>
-        <executions>
-          <execution>
-            <id>generate</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>2.19.1</version>
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <!--
+      This profile can be used to generate Java sources from the JSON schema extracted from Go code.
+
+      Launch with: mvn -Pgenerate-stub generate-sources
+
+      Generation of the stub used to be part of the main build, but recently LXD Api were updated to
+      use a special trick to inline objects into a single JSON object. The generator don't cope with
+      this and I don't have time to fix it properly.
+
+      So stub classes were manually modified to cope with the "inline" issue and are in the main source
+      folder.
+    -->
+    <profile>
+      <id>generate-stub</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jsonschema2pojo</groupId>
+            <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

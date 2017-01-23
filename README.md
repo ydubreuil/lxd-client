@@ -14,9 +14,9 @@ This will default to use LXD available locally. The client creates its own OkHtt
 
 Then, you can make requests to LXD. All requests are asynchronous and can be combined per Rx usage:
 
-    LxdClient.Container container = client.container("demo-container");
+    LxdClient.ContainerClient containerClient = client.container("demo-container");
 
-    container.init("ubuntu", "16.04", null, null, null, true)
+    containerClient.init("ubuntu", "16.04", null, null, null, true)
         .doOnComplete(() -> System.out.println("Container created"))
         .andThen(container.start().doOnComplete(() -> System.out.println("Container started")))
         .blockingAwait();

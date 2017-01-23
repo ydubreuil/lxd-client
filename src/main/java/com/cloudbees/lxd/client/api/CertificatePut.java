@@ -1,6 +1,10 @@
 
 package com.cloudbees.lxd.client.api;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -8,86 +12,55 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import javax.annotation.Generated;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
- *
- *
+ * 
+ * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
-    "managed",
     "name",
-    "type",
-    "used_by"
+    "type"
 })
-public class Network extends NetworkPut
+public class CertificatePut implements Serializable
 {
 
     /**
-     *
-     *
-     */
-    @JsonProperty("managed")
-    private Boolean managed;
-    /**
-     *
-     *
+     * 
+     * 
      */
     @JsonProperty("name")
     private String name;
     /**
-     *
-     *
+     * 
+     * 
      */
     @JsonProperty("type")
     private String type;
-    /**
-     *
-     *
-     */
-    @JsonProperty("used_by")
-    private List<String> usedBy = new ArrayList<String>();
+    @JsonIgnore
+    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     /**
      * No args constructor for use in serialization
-     *
+     * 
      */
-    public Network() {
+    public CertificatePut() {
     }
 
     /**
-     *
-     *
-     * @return
-     *     The managed
+     * 
+     * @param name
+     * @param type
      */
-    @JsonProperty("managed")
-    public Boolean getManaged() {
-        return managed;
+    public CertificatePut(String name, String type) {
+        this.name = name;
+        this.type = type;
     }
 
     /**
-     *
-     *
-     * @param managed
-     *     The managed
-     */
-    @JsonProperty("managed")
-    public void setManaged(Boolean managed) {
-        this.managed = managed;
-    }
-
-    /**
-     *
-     *
+     * 
+     * 
      * @return
      *     The name
      */
@@ -97,8 +70,8 @@ public class Network extends NetworkPut
     }
 
     /**
-     *
-     *
+     * 
+     * 
      * @param name
      *     The name
      */
@@ -108,8 +81,8 @@ public class Network extends NetworkPut
     }
 
     /**
-     *
-     *
+     * 
+     * 
      * @return
      *     The type
      */
@@ -119,8 +92,8 @@ public class Network extends NetworkPut
     }
 
     /**
-     *
-     *
+     * 
+     * 
      * @param type
      *     The type
      */
@@ -129,25 +102,14 @@ public class Network extends NetworkPut
         this.type = type;
     }
 
-    /**
-     *
-     *
-     * @return
-     *     The usedBy
-     */
-    @JsonProperty("used_by")
-    public List<String> getUsedBy() {
-        return usedBy;
+    @JsonAnyGetter
+    public Map<String, Object> getAdditionalProperties() {
+        return this.additionalProperties;
     }
 
-    /**
-     *
-     *
-     * @param usedBy
-     *     The used_by
-     */
-    @JsonProperty("used_by")
-    public void setUsedBy(List<String> usedBy) {
-        this.usedBy = usedBy;
+    @JsonAnySetter
+    public void setAdditionalProperty(String name, Object value) {
+        this.additionalProperties.put(name, value);
     }
+
 }

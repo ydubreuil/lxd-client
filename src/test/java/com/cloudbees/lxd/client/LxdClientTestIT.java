@@ -1,12 +1,10 @@
 package com.cloudbees.lxd.client;
 
 import com.cloudbees.lxd.client.api.Network;
-import com.cloudbees.lxd.client.api.NetworkConfigBuilder;
+import com.cloudbees.lxd.client.api.builder.NetworkConfigBuilder;
 import com.cloudbees.lxd.client.api.Server;
 import com.cloudbees.lxd.client.api.StatusCode;
 import io.reactivex.Completable;
-import io.reactivex.Scheduler;
-import io.reactivex.schedulers.Schedulers;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.junit.Assert;
@@ -17,7 +15,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.fail;
@@ -98,20 +95,20 @@ public class LxdClientTestIT {
                     .ipv6Address(null)
                     .build());
 
-            Network networkInfo = networkCreation.andThen(networkClient.info()).blockingGet();
-            Assert.assertEquals(networkClient.networkName, networkInfo.getName());
-            Assert.assertEquals("bridge", networkInfo.getType());
-            Assert.assertEquals("10.38.189.1/24", networkInfo.getConfig().get("ipv4.address"));
-            Assert.assertEquals("none", networkInfo.getConfig().get("ipv6.address"));
-            Assert.assertEquals("managed", networkInfo.getConfig().get("dns.mode"));
+            Network network = networkCreation.andThen(networkClient.info()).blockingGet();
+            Assert.assertEquals(networkClient.networkName, network.getName());
+            Assert.assertEquals("bridge", network.getType());
+            Assert.assertEquals("10.38.189.1/24", network.getConfig().get("ipv4.address"));
+            Assert.assertEquals("none", network.getConfig().get("ipv6.address"));
+            Assert.assertEquals("managed", network.getConfig().get("dns.mode"));
 
             Completable networkUpdate = networkClient.update(
                 new NetworkConfigBuilder()
                     .dnsMode(NetworkConfigBuilder.DnsMode.NONE)
                     .build());
 
-            networkInfo = networkUpdate.andThen(networkClient.info()).blockingGet();
-            Assert.assertEquals("none", networkInfo.getConfig().get("dns.mode"));
+            network = networkUpdate.andThen(networkClient.info()).blockingGet();
+            Assert.assertEquals("none", network.getConfig().get("dns.mode"));
 
             List<Network> networks = client.networks().blockingGet();
             for (Network n : networks) {

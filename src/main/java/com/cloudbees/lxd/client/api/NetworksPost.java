@@ -1,19 +1,16 @@
 
 package com.cloudbees.lxd.client.api;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Generated;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
-import javax.annotation.Generated;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -25,10 +22,9 @@ import java.util.Map;
 @JsonPropertyOrder({
     "managed",
     "name",
-    "type",
-    "used_by"
+    "type"
 })
-public class Network extends NetworkPut
+public class NetworksPost extends NetworkPut
 {
 
     /**
@@ -49,18 +45,12 @@ public class Network extends NetworkPut
      */
     @JsonProperty("type")
     private String type;
-    /**
-     *
-     *
-     */
-    @JsonProperty("used_by")
-    private List<String> usedBy = new ArrayList<String>();
 
     /**
      * No args constructor for use in serialization
      *
      */
-    public Network() {
+    public NetworksPost() {
     }
 
     /**
@@ -129,25 +119,4 @@ public class Network extends NetworkPut
         this.type = type;
     }
 
-    /**
-     *
-     *
-     * @return
-     *     The usedBy
-     */
-    @JsonProperty("used_by")
-    public List<String> getUsedBy() {
-        return usedBy;
-    }
-
-    /**
-     *
-     *
-     * @param usedBy
-     *     The used_by
-     */
-    @JsonProperty("used_by")
-    public void setUsedBy(List<String> usedBy) {
-        this.usedBy = usedBy;
-    }
 }
