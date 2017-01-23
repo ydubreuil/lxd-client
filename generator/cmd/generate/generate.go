@@ -41,8 +41,6 @@ type Schema struct {
 	SnapshotInfo                  api.ContainerSnapshot
 	Container                     api.Container
     Profile                       api.Profile
-    Network                       api.Network
-    NetworksPost                  api.NetworksPost
     ImageAliasesEntry             api.ImageAliasesEntry
     ImageSource                   api.ImageSource
     Image                         api.Image

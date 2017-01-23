@@ -24,11 +24,13 @@
 
 package com.cloudbees.lxd.client;
 
+import com.cloudbees.lxd.client.api.ContainerState;
 import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ResponseType;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import okhttp3.Call;
@@ -61,11 +63,20 @@ public class LxdResponseParser {
         return Single.just(parse(typeReference, ResponseType.SYNC, 200).getData());
     }
 
+    public Completable parseSyncOperation(int expectedHttpStatusCode) {
+         parse(new TypeReference<LxdResponse<Void>>() {}, ResponseType.SYNC, false, expectedHttpStatusCode);
+         return Completable.complete();
+    }
+
     public LxdResponse<Operation> parseOperation(ResponseType expectedResponseType, int... expectedHttpStatusCodes) {
         return parse(new TypeReference<LxdResponse<Operation>>() {}, expectedResponseType, expectedHttpStatusCodes);
     }
 
     public <T> LxdResponse<T> parse(TypeReference<LxdResponse<T>> typeReference, ResponseType expectedResponseType, int... expectedHttpStatusCodes) {
+        return parse(typeReference, expectedResponseType, true, expectedHttpStatusCodes);
+    }
+
+    public <T> LxdResponse<T> parse(TypeReference<LxdResponse<T>> typeReference, ResponseType expectedResponseType, boolean returnNullOnKnownError, int... expectedHttpStatusCodes) {
         assertHttpResponseCodes(call, response, expectedHttpStatusCodes);
         LxdResponse<T> lxdResponse = null;
         try {
@@ -78,7 +89,11 @@ public class LxdResponseParser {
         if (lxdResponse.getType() == null || ResponseType.ERROR == lxdResponse.getType()) {
             for(int expectedStatusCode: expectedHttpStatusCodes) {
                 if (lxdResponse.getErrorCode() == expectedStatusCode) {
-                    return null;
+                    if (returnNullOnKnownError) {
+                        return null;
+                    } else {
+                        throw new LxdExceptionBuilder(call.request()).with(lxdResponse).build();
+                    }
                 }
             }
             throw new LxdExceptionBuilder(call.request()).with(lxdResponse).build();

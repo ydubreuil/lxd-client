@@ -31,6 +31,7 @@ import com.cloudbees.lxd.client.api.Device;
 import com.cloudbees.lxd.client.api.Image;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.LxdResponse;
+import com.cloudbees.lxd.client.api.Network;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ResponseType;
 import com.cloudbees.lxd.client.api.Server;
@@ -100,9 +101,9 @@ public class LxdClient implements AutoCloseable {
     /**
      * @return List of existing containers
      */
-    public Single<List<ContainerClient>> containers() {
+    public Single<List<Container>> containers() {
         return rxClient.get("1.0/containers" + RECURSION_SUFFIX).build()
-            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<ContainerClient>>>() {}));
+            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Container>>>() {}));
     }
 
     public ContainerClient container(String name) {
@@ -347,6 +348,73 @@ public class LxdClient implements AutoCloseable {
     public Maybe<ImageAliasesEntry> alias(String aliasName) {
         return rxClient.get(format("1.0/images/aliases/%s", aliasName)).build()
             .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ImageAliasesEntry>>(){}));
+    }
+
+    /**
+     * @return List of existing networks
+     */
+    public Single<List<Network>> networks() {
+        return rxClient.get("1.0/networks" + RECURSION_SUFFIX).build()
+            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Network>>>() {}));
+    }
+
+    public NetworkClient network(String name) {
+        return new NetworkClient(name);
+    }
+
+    public class NetworkClient {
+        final String networkName;
+
+        /**
+         * Returns an API to interact with a network
+         * @param networkName the name of the network. Should be 64 chars max, ASCII, no slash, no colon and no comma
+         */
+        NetworkClient(String networkName) {
+            this.networkName = networkName;
+        }
+
+        /**
+         * Creates a new network bridge
+         * @param config the network configuration
+         * @return
+         */
+        public Completable create(HashMap<String, String> config) {
+            Network network = new Network();
+            network.setName(networkName);
+            network.setConfig(config);
+            network.setManaged(true);
+
+            return rxClient.post("1.0/networks", json(network)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(201));
+        }
+
+        public Completable delete() {
+            return rxClient.delete(format("1.0/networks/%s", networkName)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
+
+        /**
+         * @return information about the network
+         */
+        public Maybe<Network> info() {
+            return rxClient.get(format("1.0/networks/%s", networkName)).build()
+                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Network>>() {}));
+        }
+
+        /**
+         * Update a new network bridge
+         * @param config the network configuration
+         * @return
+         */
+        public Completable update(HashMap<String, String> config) {
+            Network network = new Network();
+            network.setName(networkName);
+            network.setConfig(config);
+            network.setManaged(true);
+
+            return rxClient.put(format("1.0/networks/%s", networkName), json(network)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
     }
 
     /**
