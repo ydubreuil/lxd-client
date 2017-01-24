@@ -26,13 +26,16 @@ package com.cloudbees.lxd.client;
 
 import com.cloudbees.lxd.client.api.Container;
 import com.cloudbees.lxd.client.api.ContainerAction;
+import com.cloudbees.lxd.client.api.ContainerPut;
 import com.cloudbees.lxd.client.api.ContainerState;
-import com.cloudbees.lxd.client.api.Device;
 import com.cloudbees.lxd.client.api.Image;
 import com.cloudbees.lxd.client.api.ImageAliasesEntry;
 import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.Network;
 import com.cloudbees.lxd.client.api.Operation;
+import com.cloudbees.lxd.client.api.Profile;
+import com.cloudbees.lxd.client.api.ProfilePost;
+import com.cloudbees.lxd.client.api.ProfilePut;
 import com.cloudbees.lxd.client.api.ResponseType;
 import com.cloudbees.lxd.client.api.Server;
 import com.cloudbees.lxd.client.api.StatusCode;
@@ -207,13 +210,10 @@ public class LxdClient implements AutoCloseable {
          * Create a new container
          * @param imgremote either null for the local LXD daemon or one of remote name defined in {@link Config#remotesURL}
          * @param image
-         * @param profiles
-         * @param config Config override
-         * @param devices Optional list of devices the container should have
-         * @param ephem Whether to destroy the container on shutdown
+         * @param containerSpec specification of this new container
          * @return
          */
-        public Completable init(String imgremote, String image, List<String> profiles, Map<String, String> config, List<Device> devices, boolean ephem) {
+        public Completable init(String imgremote, String image, ContainerPut containerSpec) {
 
             Map<String, String> source = new HashMap<>();
             source.put("type", "image");
@@ -230,17 +230,17 @@ public class LxdClient implements AutoCloseable {
             body.put("source", source);
             body.put("name", containerName);
 
-            if (profiles != null && !profiles.isEmpty()) {
-                body.put("profiles", profiles);
+            if (containerSpec.getProfiles() != null && !containerSpec.getProfiles().isEmpty()) {
+                body.put("profiles", containerSpec.getProfiles());
             }
-            if (config != null && !config.isEmpty()) {
-                body.put("config", config);
+            if (containerSpec.getConfig() != null && !containerSpec.getConfig().isEmpty()) {
+                body.put("config", containerSpec.getConfig());
             }
-            if (devices != null && !devices.isEmpty()) {
-                body.put("devices", devices);
+            if (containerSpec.getDevices() != null && !containerSpec.getDevices().isEmpty()) {
+                body.put("devices", containerSpec.getDevices());
             }
-            if (ephem) {
-                body.put("ephem", ephem);
+            if (containerSpec.getEphemeral() != null) {
+                body.put("ephem", containerSpec.getEphemeral().toString());
             }
 
             return rxClient.post(format("1.0/containers", containerName), json(body)).build()
@@ -374,7 +374,7 @@ public class LxdClient implements AutoCloseable {
         }
 
         /**
-         * Creates a new network bridge
+         * Creates a new network
          * @param config the network configuration
          * @return
          */
@@ -402,7 +402,20 @@ public class LxdClient implements AutoCloseable {
         }
 
         /**
-         * Update a new network bridge
+         * Rename a network
+         * @param newName the new name of this network
+         * @return
+         */
+        public Completable rename(String newName) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("name", newName);
+
+            return rxClient.post(format("1.0/networks/%s", networkName), json(body)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
+
+        /**
+         * Update a network
          * @param config the network configuration
          * @return
          */
@@ -413,6 +426,79 @@ public class LxdClient implements AutoCloseable {
             network.setManaged(true);
 
             return rxClient.put(format("1.0/networks/%s", networkName), json(network)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
+    }
+
+
+    /**
+     * @return List of existing profiles
+     */
+    public Single<List<Profile>> profiles() {
+        return rxClient.get("1.0/profiles" + RECURSION_SUFFIX).build()
+            .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Profile>>>() {}));
+    }
+
+    public ProfileClient profile(String name) {
+        return new ProfileClient(name);
+    }
+
+    public class ProfileClient {
+        final String profileName;
+
+        /**
+         * Returns an API to interact with a profile
+         * @param profileName the name of the profile.
+         */
+        ProfileClient(String profileName) {
+            this.profileName = profileName;
+        }
+
+        /**
+         * Creates a new profile
+         * @param profileSpec the profile configuration
+         * @return
+         */
+        public Completable create(ProfilePut profileSpec) {
+            ProfilePost body = new ProfilePost(profileName, profileSpec);
+
+            return rxClient.post("1.0/profiles", json(body)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(201));
+        }
+
+        public Completable delete() {
+            return rxClient.delete(format("1.0/profiles/%s", profileName)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
+
+        /**
+         * @return information about the profile
+         */
+        public Maybe<Profile> info() {
+            return rxClient.get(format("1.0/profiles/%s", profileName)).build()
+                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Profile>>() {}));
+        }
+
+        /**
+         * Rename a profile
+         * @param newName the new name of this network
+         * @return
+         */
+        public Completable rename(String newName) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("name", newName);
+
+            return rxClient.post(format("1.0/profiles/%s", profileName), json(body)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
+
+        /**
+         * Update a profile
+         * @param profileSpec the profile configuration
+         * @return
+         */
+        public Completable update(ProfilePut profileSpec) {
+            return rxClient.put(format("1.0/profiles/%s", profileName), json(profileSpec)).build()
                 .flatMapCompletable(rp -> rp.parseSyncOperation(200));
         }
     }

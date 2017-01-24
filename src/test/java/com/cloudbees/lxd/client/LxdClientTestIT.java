@@ -1,5 +1,6 @@
 package com.cloudbees.lxd.client;
 
+import com.cloudbees.lxd.client.api.ContainerPut;
 import com.cloudbees.lxd.client.api.Network;
 import com.cloudbees.lxd.client.api.builder.NetworkConfigBuilder;
 import com.cloudbees.lxd.client.api.Server;
@@ -51,7 +52,7 @@ public class LxdClientTestIT {
         LxdClient.ContainerClient container = client.container("it-" + Long.toHexString(System.nanoTime()));
 
         try {
-            container.init("ubuntu", "16.04", null, null, null, true).doOnComplete(() -> System.out.println("Container created"))
+            container.init("ubuntu", "16.04", new ContainerPut()).doOnComplete(() -> System.out.println("Container created"))
                 .andThen(container.start().doOnComplete(() -> System.out.println("Container started")))
                 .andThen(container.filePush("/home/ubuntu/.ssh/authorized_keys", 1000, 1000, "400", RequestBody.create(MediaType.parse("application/octet-stream"), "ssh-rsa this is a joke!"))
                     .compose(t -> LxdClientHelpers.retryOnFailure(t, 10))

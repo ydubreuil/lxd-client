@@ -24,7 +24,6 @@
 
 package com.cloudbees.lxd.client;
 
-import com.cloudbees.lxd.client.api.ContainerState;
 import com.cloudbees.lxd.client.api.LxdResponse;
 import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ResponseType;

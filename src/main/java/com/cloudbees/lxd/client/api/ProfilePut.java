@@ -54,6 +54,16 @@ public class ProfilePut implements Serializable
     }
 
     /**
+     * Copy constructor.
+     *
+     */
+    public ProfilePut(ProfilePut source) {
+        this.config = source.config;
+        this.description = source.description;
+        this.devices = source.devices;
+    }
+
+    /**
      *
      *
      * @return
