@@ -33,7 +33,7 @@ public class Config {
 
     private final String baseURL;
     private final String unixSocketPath;
-    private final Map<String, String> remotesURL = new HashMap<>();
+    private final Map<String, Remote> remotes;
 
     private HttpLoggingInterceptor.Level logLevel = HttpLoggingInterceptor.Level.BODY;
 
@@ -58,11 +58,7 @@ public class Config {
         this.clientPEMCert = clientPEMCert;
         this.clientPEMPrivateKey = clientPEMPrivateKey;
         this.clientPEMPrivateKeyPassphrase = clientPEMPrivateKeyPassphrase;
-
-        // from https://github.com/lxc/lxd/blob/34f62a7ea5cfea0f640ceb16ffc49a8f7c206c6c/config.go#L54
-        remotesURL.put("images", "https://images.linuxcontainers.org");
-        remotesURL.put("ubuntu", "https://cloud-images.ubuntu.com/releases");
-        remotesURL.put("ubuntu-daily", "https://cloud-images.ubuntu.com/daily");
+        this.remotes = defaultRemote();
     }
 
     public String getBaseURL() {
@@ -97,8 +93,8 @@ public class Config {
         return logLevel;
     }
 
-    public Map<String, String> getRemotesURL() {
-        return remotesURL;
+    public Map<String, Remote> getRemotes() {
+        return remotes;
     }
 
     public static Config localAccessConfig() {
@@ -114,5 +110,49 @@ public class Config {
 
     public static Config remoteAccessConfig(String baseURL) {
         return new Config(baseURL, null, null, null, null, null);
+    }
+
+    /**
+     * A remote LXD host
+     */
+    public static class Remote {
+
+        private final String address;
+        private final boolean _public;
+        private final String protocol;
+        private final boolean _static;
+
+        public Remote(String address, boolean _public, String protocol, boolean _static) {
+            this.address = address;
+            this._public = _public;
+            this.protocol = protocol;
+            this._static = _static;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public boolean isPublic() {
+            return _public;
+        }
+
+        public String getProtocol() {
+            return protocol;
+        }
+
+        public boolean isStatic() {
+            return _static;
+        }
+    }
+
+    public static Map<String, Remote> defaultRemote() {
+        HashMap<String, Remote> remotes = new HashMap<>();
+        remotes.put("local", new Remote("unix://", false, null, true));
+        remotes.put("images", new Remote("https://images.linuxcontainers.org", true, "simplestreams", false));
+        remotes.put("ubuntu", new Remote("https://cloud-images.ubuntu.com/releases", true, "simplestreams", true));
+        remotes.put("ubuntu-daily", new Remote("https://cloud-images.ubuntu.com/daily", true, "simplestreams", true));
+
+        return remotes;
     }
 }

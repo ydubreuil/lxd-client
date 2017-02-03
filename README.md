@@ -27,9 +27,12 @@ You can find usage sample in tests.
 
 The API is in early beta, so breakage will happen for time to time. What's implemented by now:
 
-* connecting through HTTPS and Unix Socket
-* some operations to manage images
-* some operations to manage containers
+* connecting through HTTPS (and Unix Socket to some extent)
+* operations to manage images
+* operations to manage containers
+* operations to manage networks
+
+Note that WebSocket throught Unix Socket is not working yet.
 
 ## Developing
 
@@ -40,7 +43,8 @@ Client code is based on LXD documentation, see:
 
 Starting to code with Rx can be difficult, so here is some good starting points:
 
-* https://yarikx.github.io/NotRxJava/
+* NotRxJava guide for lazy folks: https://yarikx.github.io/NotRxJava/
+* [GOTO 2016 • Exploring RxJava 2 for Android • Jake Wharton (YT)](https://www.youtube.com/watch?v=htIXKI5gOQU)
 
 ### Vagrant box with LXD
 

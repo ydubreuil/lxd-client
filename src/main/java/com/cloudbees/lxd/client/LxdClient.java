@@ -208,7 +208,7 @@ public class LxdClient implements AutoCloseable {
 
         /**
          * Create a new container
-         * @param imgremote either null for the local LXD daemon or one of remote name defined in {@link Config#remotesURL}
+         * @param imgremote either null for the local LXD daemon or one of remote name defined in {@link Config#remotes}
          * @param image
          * @param containerSpec specification of this new container
          * @return
@@ -218,9 +218,12 @@ public class LxdClient implements AutoCloseable {
             Map<String, String> source = new HashMap<>();
             source.put("type", "image");
             if (imgremote != null) {
-                source.put("server", rxClient.getConfig().getRemotesURL().get(imgremote));
-                source.put("protocol", "simplestreams");
-                // source.put("certificate", ); <= fetch the cert?
+                Config.Remote remote = rxClient.getConfig().getRemotes().get(imgremote);
+                if (remote == null) {
+                    throw new IllegalArgumentException();
+                }
+                source.put("server", remote.getAddress());
+                if (remote.getProtocol() != null) source.put("protocol", remote.getProtocol());
                 source.put("fingerprint", image);
             } else {
                 throw new IllegalArgumentException();
