@@ -523,7 +523,7 @@ public class LxdClient implements AutoCloseable {
 
           https://medium.com/@v.danylo/server-polling-and-retrying-failed-operations-with-retrofit-and-rxjava-8bcc7e641a5a#.9ji4311wi
          */
-        return rxClient.get(format("%s/wait?timeout=5", operationResponse.getOperationUrl())).build()
+        return rxClient.get(format("%s/wait?timeout=1", operationResponse.getOperationUrl())).build()
             .flatMapObservable(rp -> Observable.just(rp.parseOperation(ResponseType.SYNC, 200).getData()))
             .repeat()
             .takeUntil(operation -> operation.getStatusCode() != StatusCode.Running)
