@@ -300,6 +300,11 @@ public class LxdClient implements AutoCloseable {
             return action(ContainerAction.Stop, timeout, force, stateful);
         }
 
+        public Completable update(ContainerPut containerSpec) {
+            return rxClient.put(format("1.0/containers/%s", containerName), json(containerSpec)).build()
+                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+        }
+
         public Completable filePush(String targetPath, int gid, int uid, String mode, RequestBody body) {
             return rxClient
                 .post(urlBuilder -> urlBuilder
