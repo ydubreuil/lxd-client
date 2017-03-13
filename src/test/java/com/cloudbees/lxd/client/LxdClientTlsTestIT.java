@@ -18,10 +18,9 @@ public class LxdClientTlsTestIT {
     }
 
     public static Config buildTlsConfig() throws IOException {
-        return Config.remoteAccessConfig("https://localhost:8443", readFile("vagrant/server.crt"), readFile("vagrant/client.crt"), readFile("vagrant/client.key"), null);
-    }
-
-    private static String readFile(String name) throws IOException {
-        return new okio.Buffer().readFrom(new FileInputStream(Paths.get(name).toFile())).readString(Charset.defaultCharset());
+        return Config.remoteAccessConfig("https://localhost:8443",
+            Config.readFile(Paths.get("vagrant/server.crt")),
+            Config.readFile(Paths.get("vagrant/client.crt")),
+            Config.readFile(Paths.get("vagrant/client.key")), null);
     }
 }

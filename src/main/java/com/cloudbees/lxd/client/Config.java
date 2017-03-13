@@ -26,6 +26,11 @@ package com.cloudbees.lxd.client;
 
 import okhttp3.logging.HttpLoggingInterceptor;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -154,5 +159,15 @@ public class Config {
         remotes.put("ubuntu-daily", new Remote("https://cloud-images.ubuntu.com/daily", true, "simplestreams", true));
 
         return remotes;
+    }
+
+    /**
+     * Read a file, can be used to read LXD certificates
+     * @param path path to the file
+     * @return content of the file
+     * @throws IOException in case somethings goes wrong
+     */
+    public static String readFile(Path path) throws IOException {
+        return new okio.Buffer().readFrom(new FileInputStream(path.toFile())).readString(Charset.defaultCharset());
     }
 }
