@@ -9,16 +9,34 @@
 			"revisionTime": "2016-09-12T15:30:41Z"
 		},
 		{
-			"checksumSHA1": "lymxZVCUdDXkpfAS2sZZCXZ8uY4=",
+			"checksumSHA1": "WP7vv2s4cI6t68HlXRkW01r6I4I=",
 			"path": "github.com/lxc/lxd/shared",
-			"revision": "070a68a342601b6179c3f972d38f5459f050e7c8",
-			"revisionTime": "2017-01-20T02:27:57Z"
+			"revision": "bc1ac411b9c9b11583e474688428015177c6cdb2",
+			"revisionTime": "2018-04-18T19:39:54Z"
 		},
 		{
-			"checksumSHA1": "H9kL2dFnl9O4InCIwbmq2PDo/rI=",
+			"checksumSHA1": "IK0qulZTX4OouanRZgbmyxMGJv4=",
 			"path": "github.com/lxc/lxd/shared/api",
-			"revision": "070a68a342601b6179c3f972d38f5459f050e7c8",
-			"revisionTime": "2017-01-20T02:27:57Z"
+			"revision": "bc1ac411b9c9b11583e474688428015177c6cdb2",
+			"revisionTime": "2018-04-18T19:39:54Z"
+		},
+		{
+			"checksumSHA1": "pi40n4a93JpBIUykDyaq6mhQGh0=",
+			"path": "github.com/lxc/lxd/shared/cancel",
+			"revision": "bc1ac411b9c9b11583e474688428015177c6cdb2",
+			"revisionTime": "2018-04-18T19:39:54Z"
+		},
+		{
+			"checksumSHA1": "cBk8jTb7yMdQyLXy0UwvDlw8K6g=",
+			"path": "github.com/lxc/lxd/shared/ioprogress",
+			"revision": "bc1ac411b9c9b11583e474688428015177c6cdb2",
+			"revisionTime": "2018-04-18T19:39:54Z"
+		},
+		{
+			"checksumSHA1": "KotoMpJvNmuV9ur+rgr59qOzT44=",
+			"path": "github.com/lxc/lxd/shared/logger",
+			"revision": "bc1ac411b9c9b11583e474688428015177c6cdb2",
+			"revisionTime": "2018-04-18T19:39:54Z"
 		}
 	],
 	"rootPath": "github.com/cloudbees/lxd-client/generator"
