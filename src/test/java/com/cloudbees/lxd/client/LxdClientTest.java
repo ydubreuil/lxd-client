@@ -46,7 +46,7 @@ public class LxdClientTest {
             TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0", "server-trusted.json").build();
             LxdClient client = new LxdClient(t.getConfig())
         ) {
-            Server server = client.server().blockingGet();
+            Server server = client.server().block();
 
             RecordedRequest rr = t.server.takeRequest();
             assertEquals("/1.0", rr.getPath());
@@ -64,7 +64,7 @@ public class LxdClientTest {
             LxdClient client = new LxdClient(t.getConfig())
         ) {
             try {
-                client.server().blockingGet();
+                client.server().block();
                 fail();
             } catch (Exception e) {
                 Assert.assertTrue(e instanceof LxdClientException);
@@ -82,9 +82,9 @@ public class LxdClientTest {
              LxdClient client = new LxdClient(t.getConfig())
         ) {
             LxdClient.ContainerClient containerClient = client.container("it-957d09c12a9");
-            Container container = containerClient.info().blockingGet();
+            Container container = containerClient.info().block();
             assertEquals(StatusCode.Stopped, container.getStatusCode());
-            containerClient.start().blockingAwait();
+            containerClient.start().block();
         }
     }
 
@@ -94,7 +94,7 @@ public class LxdClientTest {
             TestHelper t = new TestHelper.Builder().dispatchJsonFile("/1.0/images?recursion=1", "listImages.json").build();
             LxdClient client = new LxdClient(t.getConfig())
         ) {
-            List<Image> images = client.images().blockingGet();
+            List<Image> images = client.images().block();
 
             assertEquals(1, images.size());
             Image first = images.get(0);

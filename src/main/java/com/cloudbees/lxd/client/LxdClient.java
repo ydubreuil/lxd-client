@@ -44,12 +44,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.reactivex.Completable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -96,7 +94,7 @@ public class LxdClient implements AutoCloseable {
     /**
      * @return Server configuration and environment information
      */
-    public Single<Server> server() {
+    public Mono<Server> server() {
         return rxClient.get("1.0").build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<Server>>() {}));
     }
@@ -104,7 +102,7 @@ public class LxdClient implements AutoCloseable {
     /**
      * @return List of existing containers
      */
-    public Single<List<Container>> containers() {
+    public Mono<List<Container>> containers() {
         return rxClient.get("1.0/containers" + RECURSION_SUFFIX).build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Container>>>() {}));
     }
@@ -132,7 +130,7 @@ public class LxdClient implements AutoCloseable {
          * @param stateful Whether to store or restore runtime state before stopping or starting (only valid for stop and start, defaults to false)
          * @return
          */
-        protected Completable action(ContainerAction action, int timeout, boolean force, boolean stateful) {
+        protected Mono<Void> action(ContainerAction action, int timeout, boolean force, boolean stateful) {
             Map<String, Object> body = new HashMap<>();
             body.put("action", action.getValue());
             body.put("timeout", timeout);
@@ -145,20 +143,20 @@ public class LxdClient implements AutoCloseable {
             }
 
             return rxClient.put(format("1.0/containers/%s/state", containerName), json(body)).build()
-                    .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
-        public Completable delete() {
+        public Mono<Void> delete() {
             return rxClient.delete(format("1.0/containers/%s", containerName)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
-        public Completable deleteSnapshot(String snapshotName) {
+        public Mono<Void> deleteSnapshot(String snapshotName) {
             return rxClient.delete(format("1.0/containers/%s/snapshots/%s", containerName, snapshotName)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
         /**
@@ -170,40 +168,41 @@ public class LxdClient implements AutoCloseable {
          * @param stderr Standard error or null to discard
          * @return
          */
-        public Maybe<Integer> execute(List<String> commands, Map<String, String> environment, InputStream stdin, OutputStream stdout, OutputStream stderr) {
+        public Mono<Integer> execute(List<String> commands, Map<String, String> environment, InputStream stdin, OutputStream stdout, OutputStream stderr) {
             Map<String, Object> body = new HashMap<>();
             body.put("command", commands);
             body.put("environment", environment);
             body.put("wait-for-websocket", true);
             body.put("interactive", false);
-
+ return null;
+ /*
             return rxClient.post(format("1.0/containers/%s/exec", containerName), json(body)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapMaybe(response -> {
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(response -> {
                     Map<String, String> fds = (Map<String, String>) response.getData().getMetadata().get("fds");
 
                     String stdinWsUrl = format("%s/websocket?secret=%s", response.getOperationUrl(), fds.get("0"));
-                    Completable stdinWs = rxWsClient.wsCall(stdinWsUrl, stdin != null ? stdin : new ByteArrayInputStream(new byte[]{}), null);
+                    Mono<Void> stdinWs = rxWsClient.wsCall(stdinWsUrl, stdin != null ? stdin : new ByteArrayInputStream(new byte[]{}), null);
 
                     String stdoutWsUrl = format("%s/websocket?secret=%s", response.getOperationUrl(), fds.get("1"));
-                    Completable stdoutWs = rxWsClient.wsCall(stdoutWsUrl, null, stdout);
+                    Mono<Void> stdoutWs = rxWsClient.wsCall(stdoutWsUrl, null, stdout);
 
                     String stderrWsUrl = format("%s/websocket?secret=%s", response.getOperationUrl(), fds.get("2"));
-                    Completable stderrWs = rxWsClient.wsCall(stderrWsUrl, null, stderr);
+                    Mono<Void> stderrWs = rxWsClient.wsCall(stderrWsUrl, null, stderr);
 
-                    return Completable.mergeArray(stdinWs, stdoutWs, stderrWs)
+                    return Mono.mergeArray(stdinWs, stdoutWs, stderrWs)
                         .andThen(rxClient.get(format("%s/wait", response.getOperationUrl())).build())
                         .flatMapMaybe(rp -> {
                             Operation op = rp.parseOperation(ResponseType.SYNC, 200).getData();
                             Object processExitCode = op.getMetadata().get("return");
-                            return Maybe.just((Integer) processExitCode);
+                            return Mono.just((Integer) processExitCode);
                         });
-                });
+                });*/
         }
 
-        public Maybe<Container> info() {
+        public Mono<Container> info() {
             return rxClient.get(format("1.0/containers/%s", containerName)).build()
-                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Container>>() {}));
+                .flatMap(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Container>>() {}));
         }
 
         /**
@@ -213,7 +212,7 @@ public class LxdClient implements AutoCloseable {
          * @param containerSpec specification of this new container
          * @return
          */
-        public Completable init(String imgremote, String image, ContainerPut containerSpec) {
+        public Mono<Void> init(String imgremote, String image, ContainerPut containerSpec) {
 
             Map<String, String> source = new HashMap<>();
             source.put("type", "image");
@@ -247,30 +246,30 @@ public class LxdClient implements AutoCloseable {
             }
 
             return rxClient.post(format("1.0/containers", containerName), json(body)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
-        public Maybe<InputStream> log(String fileName) {
+        public Mono<InputStream> log(String fileName) {
             throw new UnsupportedOperationException();
         }
 
-        public Completable rename(String newName) {
+        public Mono<Void> rename(String newName) {
             Map<String, Object> body = new HashMap<>();
             body.put("name", newName);
 
             return rxClient.post(format("1.0/containers/%s", containerName), json(body)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
-        public Completable renameSnapshot(String name, String newName) {
+        public Mono<Void> renameSnapshot(String name, String newName) {
             Map<String, Object> body = new HashMap<>();
             body.put("name", newName);
 
             return rxClient.post(format("1.0/containers/%s/snapshots/%s", containerName, name), json(body)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
 
         /**
@@ -280,13 +279,13 @@ public class LxdClient implements AutoCloseable {
          *
          * @return
          */
-        public Completable start() {
+        public Mono<Void> start() {
             return action(ContainerAction.Start, 0, false, false);
         }
 
-        public Maybe<ContainerState> state() {
+        public Mono<ContainerState> state() {
             return rxClient.get(format("1.0/containers/%s", containerName)).build()
-               .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ContainerState>>() {}));
+               .flatMap(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ContainerState>>() {}));
         }
 
         /**
@@ -296,16 +295,16 @@ public class LxdClient implements AutoCloseable {
          * @param stateful Whether to store or restore runtime state before stopping or starting (only valid for stop and start, defaults to false)
          * @return
          */
-        public Completable stop(int timeout, boolean force, boolean stateful) {
+        public Mono<Void> stop(int timeout, boolean force, boolean stateful) {
             return action(ContainerAction.Stop, timeout, force, stateful);
         }
 
-        public Completable update(ContainerPut containerSpec) {
+        public Mono<Void> update(ContainerPut containerSpec) {
             return rxClient.put(format("1.0/containers/%s", containerName), json(containerSpec)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
 
-        public Completable filePush(String targetPath, int gid, int uid, String mode, RequestBody body) {
+        public Mono<Void> filePush(String targetPath, int gid, int uid, String mode, RequestBody body) {
             return rxClient
                 .post(urlBuilder -> urlBuilder
                     .addPathSegment("1.0/containers").addPathSegment(containerName).addPathSegment("files")
@@ -316,16 +315,16 @@ public class LxdClient implements AutoCloseable {
                     .addHeader("X-LXD-mode", mode)
                     .addHeader("X-LXD-uid", String.valueOf(uid))
                     .addHeader("X-LXD-gid", String.valueOf(gid)))
-                .flatMapCompletable(rp -> rp.parse(new TypeReference<LxdResponse<Void>>() {}, ResponseType.SYNC, 200) != null ?
-                    Completable.complete() : Completable.error(new LxdClientException("")));
+                .flatMap(rp -> rp.parse(new TypeReference<LxdResponse<Void>>() {}, ResponseType.SYNC, 200) != null ?
+                    Mono.empty() : Mono.error(new LxdClientException("")));
         }
 
-        public Completable filePush(String targetPath, int gid, int uid, String mode, File file) {
+        public Mono<Void> filePush(String targetPath, int gid, int uid, String mode, File file) {
             return filePush(targetPath, gid, uid, mode, RequestBody.create(MediaType.parse("application/octet-stream"), file));
         }
     }
 
-    public Single<List<Image>> images() {
+    public Mono<List<Image>> images() {
         return rxClient.get("1.0/images" + RECURSION_SUFFIX).build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Image>>>(){}));
     }
@@ -341,27 +340,27 @@ public class LxdClient implements AutoCloseable {
             this.imageFingerprint = imageFingerprint;
         }
 
-        public Maybe<Image> info() {
+        public Mono<Image> info() {
             return rxClient.get(format("1.0/images/%s", imageFingerprint)).build()
-                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Image>>(){}));
+                .flatMap(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Image>>(){}));
         }
 
-        public Completable delete() {
+        public Mono<Void> delete() {
             return rxClient.delete(format("1.0/images/%s", imageFingerprint)).build()
-                .flatMap(rp -> Single.just(rp.parseOperation(ResponseType.ASYNC, 202)))
-                .flatMapCompletable(o -> waitForCompletion(o));
+                .flatMap(rp -> Mono.just(rp.parseOperation(ResponseType.ASYNC, 202)))
+                .flatMap(o -> waitForCompletion(o));
         }
     }
 
-    public Maybe<ImageAliasesEntry> alias(String aliasName) {
+    public Mono<ImageAliasesEntry> alias(String aliasName) {
         return rxClient.get(format("1.0/images/aliases/%s", aliasName)).build()
-            .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ImageAliasesEntry>>(){}));
+            .flatMap(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<ImageAliasesEntry>>(){}));
     }
 
     /**
      * @return List of existing networks
      */
-    public Single<List<Network>> networks() {
+    public Mono<List<Network>> networks() {
         return rxClient.get("1.0/networks" + RECURSION_SUFFIX).build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Network>>>() {}));
     }
@@ -386,27 +385,27 @@ public class LxdClient implements AutoCloseable {
          * @param config the network configuration
          * @return
          */
-        public Completable create(HashMap<String, String> config) {
+        public Mono<Void> create(HashMap<String, String> config) {
             Network network = new Network();
             network.setName(networkName);
             network.setConfig(config);
             network.setManaged(true);
 
             return rxClient.post("1.0/networks", json(network)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(201));
+                .flatMap(rp -> rp.parseSyncOperation(201));
         }
 
-        public Completable delete() {
+        public Mono<Void> delete() {
             return rxClient.delete(format("1.0/networks/%s", networkName)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
 
         /**
          * @return information about the network
          */
-        public Maybe<Network> info() {
+        public Mono<Network> info() {
             return rxClient.get(format("1.0/networks/%s", networkName)).build()
-                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Network>>() {}));
+                .flatMap(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Network>>() {}));
         }
 
         /**
@@ -414,12 +413,12 @@ public class LxdClient implements AutoCloseable {
          * @param newName the new name of this network
          * @return
          */
-        public Completable rename(String newName) {
+        public Mono<Void> rename(String newName) {
             Map<String, Object> body = new HashMap<>();
             body.put("name", newName);
 
             return rxClient.post(format("1.0/networks/%s", networkName), json(body)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
 
         /**
@@ -427,14 +426,14 @@ public class LxdClient implements AutoCloseable {
          * @param config the network configuration
          * @return
          */
-        public Completable update(HashMap<String, String> config) {
+        public Mono<Void> update(HashMap<String, String> config) {
             Network network = new Network();
             network.setName(networkName);
             network.setConfig(config);
             network.setManaged(true);
 
             return rxClient.put(format("1.0/networks/%s", networkName), json(network)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
     }
 
@@ -442,7 +441,7 @@ public class LxdClient implements AutoCloseable {
     /**
      * @return List of existing profiles
      */
-    public Single<List<Profile>> profiles() {
+    public Mono<List<Profile>> profiles() {
         return rxClient.get("1.0/profiles" + RECURSION_SUFFIX).build()
             .flatMap(rp -> rp.parseSyncSingle(new TypeReference<LxdResponse<List<Profile>>>() {}));
     }
@@ -467,24 +466,24 @@ public class LxdClient implements AutoCloseable {
          * @param profileSpec the profile configuration
          * @return
          */
-        public Completable create(ProfilePut profileSpec) {
+        public Mono<Void> create(ProfilePut profileSpec) {
             ProfilePost body = new ProfilePost(profileName, profileSpec);
 
             return rxClient.post("1.0/profiles", json(body)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(201));
+                .flatMap(rp -> rp.parseSyncOperation(201));
         }
 
-        public Completable delete() {
+        public Mono<Void> delete() {
             return rxClient.delete(format("1.0/profiles/%s", profileName)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
 
         /**
          * @return information about the profile
          */
-        public Maybe<Profile> info() {
+        public Mono<Profile> info() {
             return rxClient.get(format("1.0/profiles/%s", profileName)).build()
-                .flatMapMaybe(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Profile>>() {}));
+                .flatMap(rp -> rp.parseSyncMaybe(new TypeReference<LxdResponse<Profile>>() {}));
         }
 
         /**
@@ -492,12 +491,12 @@ public class LxdClient implements AutoCloseable {
          * @param newName the new name of this network
          * @return
          */
-        public Completable rename(String newName) {
+        public Mono<Void> rename(String newName) {
             Map<String, Object> body = new HashMap<>();
             body.put("name", newName);
 
             return rxClient.post(format("1.0/profiles/%s", profileName), json(body)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
 
         /**
@@ -505,9 +504,9 @@ public class LxdClient implements AutoCloseable {
          * @param profileSpec the profile configuration
          * @return
          */
-        public Completable update(ProfilePut profileSpec) {
+        public Mono<Void> update(ProfilePut profileSpec) {
             return rxClient.put(format("1.0/profiles/%s", profileName), json(profileSpec)).build()
-                .flatMapCompletable(rp -> rp.parseSyncOperation(200));
+                .flatMap(rp -> rp.parseSyncOperation(200));
         }
     }
 
@@ -516,7 +515,7 @@ public class LxdClient implements AutoCloseable {
      * @param operationResponse
      * @return a stream of Operations
      */
-    public Completable waitForCompletion(LxdResponse<Operation> operationResponse) {
+    public Mono<Void> waitForCompletion(LxdResponse<Operation> operationResponse) {
         /*
            As explained in https://www.stgraber.org/2016/04/18/lxd-api-direct-interaction/
           "data about past operations disappears 5 seconds after they’re done."
@@ -524,11 +523,11 @@ public class LxdClient implements AutoCloseable {
           https://medium.com/@v.danylo/server-polling-and-retrying-failed-operations-with-retrofit-and-rxjava-8bcc7e641a5a#.9ji4311wi
          */
         return rxClient.get(format("%s/wait?timeout=1", operationResponse.getOperationUrl())).build()
-            .flatMapObservable(rp -> Observable.just(rp.parseOperation(ResponseType.SYNC, 200).getData()))
+            .flatMapMany(rp -> Flux.just(rp.parseOperation(ResponseType.SYNC, 200).getData()))
             .repeat()
             .takeUntil(operation -> operation.getStatusCode() != StatusCode.Running)
-            .lastOrError()
-            .flatMapCompletable(operation -> operation.getStatusCode() == StatusCode.Success ? Completable.complete() : Completable.error(new LxdClientException("Failed to complete")));
+            .last()
+            .flatMap(operation -> operation.getStatusCode() == StatusCode.Success ? Mono.empty() : Mono.error(new LxdClientException("Failed to complete")));
     }
 
     protected RequestBody json(Object resource) {

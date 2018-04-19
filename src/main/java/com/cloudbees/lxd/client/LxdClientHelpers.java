@@ -24,11 +24,11 @@
 
 package com.cloudbees.lxd.client;
 
-import io.reactivex.Completable;
-import io.reactivex.CompletableTransformer;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.temporal.TemporalUnit;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,10 +36,9 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class LxdClientHelpers {
 
-    public static Completable retryOnFailure(Completable t, int numberOfRetry) {
-        return t.toObservable().retryWhen(errors -> errors
-                    .zipWith(Observable.range(1, numberOfRetry), (n, i) -> i)
-                    .flatMap(retryCount -> Observable.timer((long) retryCount, TimeUnit.SECONDS)))
-            .ignoreElements();
+    public static Mono<Void> retryOnFailure(Mono<Void> t, int numberOfRetry) {
+        return t.retryWhen(errors -> errors
+            .zipWith(Flux.range(1, numberOfRetry), (n, i) -> i)
+            .flatMap(retryCount -> Flux.interval(Duration.ofSeconds((long) retryCount))));
     }
 }

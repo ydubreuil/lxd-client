@@ -29,12 +29,10 @@ import com.cloudbees.lxd.client.api.Operation;
 import com.cloudbees.lxd.client.api.ResponseType;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Completable;
-import io.reactivex.Maybe;
-import io.reactivex.Single;
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 
@@ -53,18 +51,18 @@ public class LxdResponseParser {
         this.response = response;
     }
 
-    public <T> Maybe<T> parseSyncMaybe(TypeReference<LxdResponse<T>> typeReference) {
+    public <T> Mono<T> parseSyncMaybe(TypeReference<LxdResponse<T>> typeReference) {
         LxdResponse<T> response = parse(typeReference, ResponseType.SYNC, 200, 404);
-        return response != null ? Maybe.just(response.getData()) : Maybe.empty();
+        return response != null ? Mono.just(response.getData()) : Mono.empty();
     }
 
-    public <T> Single<T> parseSyncSingle(TypeReference<LxdResponse<T>> typeReference) {
-        return Single.just(parse(typeReference, ResponseType.SYNC, 200).getData());
+    public <T> Mono<T> parseSyncSingle(TypeReference<LxdResponse<T>> typeReference) {
+        return Mono.just(parse(typeReference, ResponseType.SYNC, 200).getData());
     }
 
-    public Completable parseSyncOperation(int expectedHttpStatusCode) {
+    public Mono<Void> parseSyncOperation(int expectedHttpStatusCode) {
          parse(new TypeReference<LxdResponse<Void>>() {}, ResponseType.SYNC, false, expectedHttpStatusCode);
-         return Completable.complete();
+         return Mono.empty();
     }
 
     public LxdResponse<Operation> parseOperation(ResponseType expectedResponseType, int... expectedHttpStatusCodes) {

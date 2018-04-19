@@ -26,8 +26,6 @@ package com.cloudbees.lxd.client;
 
 import com.cloudbees.lxd.client.utils.HttpUtils;
 import com.cloudbees.lxd.client.utils.URLUtils;
-import io.reactivex.Single;
-import io.reactivex.disposables.Disposable;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -35,6 +33,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import reactor.core.Disposable;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.function.Function;
@@ -122,13 +122,13 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             this.body = body;
         }
 
-        public Single<LxdResponseParser> build(Function<Request.Builder, Request.Builder> f) {
+        public Mono<LxdResponseParser> build(Function<Request.Builder, Request.Builder> f) {
             return call(f.apply(new Request.Builder().method(method, body))
                 .addHeader("User-Agent", "LXD-Java-Client")
                 .url(resourceUrl));
         }
 
-        public Single<LxdResponseParser> build() {
+        public Mono<LxdResponseParser> build() {
             return build(Function.identity());
         }
 
@@ -137,24 +137,24 @@ public class RxOkHttpClientWrapper implements AutoCloseable {
             return this;
         }
 
-        protected Single<LxdResponseParser> call(Request.Builder requestBuilder) {
+        protected Mono<LxdResponseParser> call(Request.Builder requestBuilder) {
             Request request = requestBuilder.build();
 
-            return Single.create(s -> {
+            return Mono.create(s -> {
                 Call call = client.newCall(request);
                 call.enqueue(new Callback() {
                     @Override
                     public void onFailure(Call call1, IOException e) {
-                        s.onError(new HttpException(call1, e));
+                        s.error(new HttpException(call1, e));
                     }
 
                     @Override
                     public void onResponse(Call call1, Response response) throws IOException {
-                        s.onSuccess(responseParserFactory.build(call1, response));
+                        s.success(responseParserFactory.build(call1, response));
                     }
                 });
 
-                s.setDisposable(new Disposable() {
+                s.onDispose(new Disposable() {
                     @Override
                     public void dispose() {
                         call.cancel();
